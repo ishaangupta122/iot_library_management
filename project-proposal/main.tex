@@ -1,0 +1,226 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+% -----------------------------------------------------
+% bvraghav-tiet-ucs503p-article.sty
+% -----------------------------------------------------
+
+% Variable: Lab Instructor
+\makeatletter \newcommand{\BvrSetLabInstructor}[1]{%
+  \gdef\Bvr@LabInstructor{#1}}
+% default
+\newcommand{\Bvr@LabInstructor}{Dr. Raghav %
+  B. Venkataramaiyer}
+% public accessor
+\newcommand{\BvrLabInstructorValue}{\Bvr@LabInstructor}
+\makeatother
+
+% Add subtitle
+\usepackage{titling}
+% -- Set title bold
+\pretitle{\begin{center}\bfseries\fontsize{18bp}{18bp}\selectfont}
+\makeatletter
+\newcommand{\BvrSubtitle}[1]{%
+  \posttitle{%
+    \par\end{center}
+    \begin{center}\large#1\end{center}
+    \vskip 0.5em}%
+}
+\makeatother
+
+% Hints in the section title(s)
+\newcommand{\BvrHint}[1]{%
+  {\normalfont\normalsize\itshape\hfill #1}}
+
+% -----------------------------------------------------
+
+\title{Real-Time Library Seat Occupancy Management System}
+
+\BvrSetLabInstructor{Ms. Jhonsy Bansal}
+
+\BvrSubtitle{%
+  Project Proposal for UCS503P  \\
+  Submitted to: \BvrLabInstructorValue \\ \bfseries
+  Thapar Institute of Engineering and Technology% 
+}
+
+\author{
+  Saksham Kansal, CSED%
+  \thanks{Roll No: \texttt{1024031135}}
+  \and 
+  Ishaan Gupta, CSED%
+  \thanks{Roll No: \texttt{1024031118}}
+  \and 
+  Sanshi, CSED%
+  \thanks{Roll No: \texttt{1024031137}}
+}
+
+\date{August, 2026}
+
+\begin{document}
+\maketitle
+
+\section{Higher-order goal}
+This project aims to improve campus smart infrastructure and optimize library resource allocation by providing real-time visibility into seat availability across multi-floor library facilities[cite: 1]. While space utilization challenges affect large educational institutions globally, the immediate engineering objective is to translate IoT-based physical sensing into a low-latency, deployable software and hardware monitoring solution[cite: 1].
+
+\section{Time-to-value}
+\begin{itemize}[leftmargin=0.7cm]
+    \item We will deliver meaningful increments quickly by prototyping single-floor IR sensing arrays and validating real-time web state synchronization[cite: 1].
+    \item We will prioritize fast feedback over perfection by using weekly iterations and setting up Continuous Integration (CI) early to reduce release friction[cite: 1].
+    \item Success is defined by what can be delivered and measured in the first iteration, then improved based on user feedback[cite: 1].
+\end{itemize}
+
+\section{Problem Statement}
+Students visiting university libraries face delays and uncertainty when searching for available study desks, particularly during peak exam periods[cite: 1]. Common pain points include:
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Fragmentation:} seat search relies on physical navigation across multiple floors and aisles, causing noise and disruption[cite: 1].
+    \item \textbf{Low transparency:} students cannot easily see the current status of individual seating areas before entering (e.g., ``vacant'', ``occupied'')[cite: 1].
+    \item \textbf{Slow coordination:} library administrators lack a unified, trackable view of real-time seat utilization across different floors[cite: 1].
+    \item \textbf{Poor data quality:} static or manual entrance headcount boards provide inaccurate, lagging information regarding actual chair availability[cite: 1].
+\end{itemize}
+
+\textbf{Why this matters now (contextual relevance):} In an academic setting with high student density, even small process improvements in seating visibility can noticeably reduce search times and eliminate overcrowded reading hall friction[cite: 1].
+
+\section{Proposed Solution}
+\subsection{Overview}
+Build a web-based and IoT-enabled ``Library Seat Management System'' with the following components[cite: 1]:
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Edge sensing hardware:} ESP32 microcontrollers connected to infrared (IR) sensors placed on individual study seats[cite: 1].
+    \item \textbf{Real-time state database:} Firebase Realtime Database for instant state synchronization between microcontrollers and web clients[cite: 1].
+    \item \textbf{Interactive seat visualization portal:} React web dashboard rendering dynamic top-view maps of each library floor with green (vacant) and red (occupied) visual indicators[cite: 1].
+    \item \textbf{Kiosk/Entrance display view:} dynamic floor summaries and availability counters for entrance monitors[cite: 1].
+\end{itemize}
+
+\subsection{Core workflow}
+\begin{enumerate}[leftmargin=0.7cm]
+    \item IR sensor detects physical seat presence (student sitting or desk occupied)[cite: 1].
+    \item ESP32 reads sensor pin state, applies debouncing logic, and transmits updated seat status JSON payload to Firebase Realtime Database via Wi-Fi[cite: 1].
+    \item Firebase immediately streams database changes to all connected web clients in real-time[cite: 1].
+    \item React web app dynamically re-renders the visual desk layout (Green $\rightarrow$ Red or Red $\rightarrow$ Green)[cite: 1].
+    \item Student views real-time floor availability on web app/kiosk and navigates directly to a vacant seat[cite: 1].
+\end{enumerate}
+
+\subsection{Operational constraints for an educational, tier-2/3 setting}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Keep hardware cost low using economical active IR sensors and multiplexing modules (e.g., 74HC165 / MCP23017) to expand ESP32 pin capacity[cite: 1].
+    \item Avoid dependence on expensive high-end camera systems or research-level AI algorithms; focus on reliable hardware workflow, automation, and system correctness[cite: 1].
+    \item Design lightweight SVG visual floor maps usable on low-to-mid range smartphones and public entrance displays via responsive web design[cite: 1].
+\end{itemize}
+
+\section{Solution Approach}
+This is an engineering course project, so we focus on scalable hardware integration, database state management, and responsive front-end design rather than novel algorithm research[cite: 1].
+
+\subsection{Sensor state filtering \& quality assistance}
+Presence detection filtering will be heuristic-based:
+\begin{itemize}[leftmargin=0.7cm]
+    \item Normalize raw GPIO input signals from IR modules[cite: 1].
+    \item Apply software debouncing (3-second hysteresis window) to prevent rapid flickering from accidental hand movements[cite: 1].
+    \item Send diagnostic flags to staff dashboard if a sensor maintains constant state for anomaly detection (e.g., sensor obstruction); never auto-delete or auto-disable hardware nodes without staff review[cite: 1].
+\end{itemize}
+
+\subsection{System architecture}
+A typical 3-tier IoT web architecture:
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Frontend:} responsive UI built in React for students and staff (interactive SVG floor maps, layout switcher, summary statistics)[cite: 1].
+    \item \textbf{Backend / Real-time Sync API:} Firebase Realtime Database handling authentication, state updates, and security rules[cite: 1].
+    \item \textbf{Hardware / Database Node:} ESP32 microcontrollers streaming binary sensor states to cloud paths[cite: 1].
+\end{itemize}
+
+\subsection{CI/CD and fast delivery enabler}
+CI/CD will be used to:
+\begin{itemize}[leftmargin=0.7cm]
+    \item Automatically build and run tests on every repository push[cite: 1].
+    \item Produce repeatable deployment artifacts to static hosting (Firebase Hosting / Vercel)[cite: 1].
+    \item Enable safe and frequent releases of incremental dashboard features[cite: 1].
+\end{itemize}
+
+\section{Evaluation Criterion}
+We define success using measurable metrics tied to the core workflow[cite: 1].
+
+\subsection{Primary evaluation metric}
+\textbf{End-to-End State Update Latency (E2EL):} time between physical seat occupancy event and updated DOM rendering on the React dashboard[cite: 1].
+\begin{itemize}[leftmargin=0.7cm]
+    \item Target: median E2EL $\le$ 1.0 second during pilot window[cite: 1].
+    \item Attribution: measured from database timestamps (ESP32 trigger timestamp vs. React render event timestamp)[cite: 1].
+\end{itemize}
+
+\subsection{Secondary evaluation metrics}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Detection Accuracy:} percentage of physical seat states correctly reflected without false positives ($> 98\%$)[cite: 1].
+    \item \textbf{Search Time Reduction:} reduction in average time students spend locating a seat compared to baseline manual searching[cite: 1].
+    \item \textbf{User clarity:} student-reported clarity of floor map UI using a simple 1--5 feedback scale[cite: 1].
+    \item \textbf{Reliability:} availability of cloud sync and dashboard during operational hours ($\ge$ 99\% uptime in pilot)[cite: 1].
+\end{itemize}
+
+\subsection{Pilot validation plan}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Recruit 10--20 pilot users (students) and 2--3 library staff roles[cite: 1].
+    \item Compare metrics before/after within the iteration window by logging baseline estimates via short interviews or existing process observations[cite: 1].
+\end{itemize}
+
+\section{Scalability}
+The proposition should scale in both theoretical and practical senses[cite: 1].
+
+\begin{enumerate}[leftmargin=0.7cm]
+    \item \textbf{Scalable (theoretically):} The system should support growth in number of monitored seats, floors, and concurrent dashboard users by:
+    \begin{itemize}[leftmargin=0.7cm]
+        \item decoupling hardware nodes, database streams, and React view components,[cite: 1]
+        \item enabling indexed database paths for floor-level streaming,[cite: 1]
+        \item using stateless component design.[cite: 1]
+    \end{itemize}
+    
+    \item \textbf{Operationally deployable (practically):} The system should run on standard cloud hosting and modular microcontrollers:
+    \begin{itemize}[leftmargin=0.7cm]
+        \item managed real-time database,[cite: 1]
+        \item platform-hosted web deployment,[cite: 1]
+        \item CI/CD pipeline for staging/production.[cite: 1]
+    \end{itemize}
+\end{enumerate}
+
+\section{Engine availability heuristic}
+A mature set of ``engines'' (tooling/services) is available to implement this as an IoT web-based project:
+\begin{itemize}[leftmargin=0.7cm]
+    \item React web framework for UI components and interactive map rendering[cite: 1].
+    \item Managed real-time JSON database (Firebase Realtime Database)[cite: 1].
+    \item ESP32 microcontrollers with standard C++/Arduino Wi-Fi libraries[cite: 1].
+    \item Hosting targets (Firebase Hosting / Vercel) for instant static deployment[cite: 1].
+    \item Test framework for unit/integration testing[cite: 1].
+    \item CI runner and staging deployment target (GitHub Actions)[cite: 1].
+\end{itemize}
+We will use these mature components to focus on workflow design, correctness, and measurement rather than inventing new infrastructure[cite: 1].
+
+\section{Project scope and deliverables}
+\subsection{Initial deliverable}
+\begin{itemize}[leftmargin=0.7cm]
+    \item 4-seat ESP32 hardware prototype with IR sensors on test rig[cite: 1]
+    \item Firebase Realtime Database schema and sync logic[cite: 1]
+    \item React floor map view (single floor) with dynamic Red/Green indicators[cite: 1]
+    \item Basic logging and timestamps for E2EL measurement[cite: 1]
+    \item CI: build + frontend unit tests + linting[cite: 1]
+    \item CD to staging with a single command or pipeline job[cite: 1]
+\end{itemize}
+
+\subsection{Subsequent deliverables}
+\begin{itemize}[leftmargin=0.7cm]
+    \item Multi-floor view navigation and floor switcher[cite: 1]
+    \item I/O expander integration for scaling to 16+ seats per ESP32[cite: 1]
+    \item Admin/ops dashboard for historical occupancy metrics and sensor diagnostics[cite: 1]
+    \item Entrance kiosk display mode with summarized availability metrics[cite: 1]
+\end{itemize}
+
+\section{Risks and mitigations}
+\begin{itemize}[leftmargin=0.7cm]
+    \item \textbf{Ambient light interference on IR sensors:} use active optical proximity sensors with shielding tubes and software threshold debouncing[cite: 1].
+    \item \textbf{Wi-Fi connectivity dropouts:} implement local reconnection logic on ESP32 with state caching upon reconnect[cite: 1].
+    \item \textbf{Evaluation measurement ambiguity:} instrument timestamps and define clear status transitions before hardware deployment[cite: 1].
+    \item \textbf{Operational issues in pilot:} use staging early; ensure CI/CD produces repeatable deployments[cite: 1].
+\end{itemize}
+
+\section{Summary}
+This project proposes a deployable IoT and web platform to reduce library seat searching delays[cite: 1]. It meets the course criteria by emphasizing time-to-value through rapid iterations, implementing CI/CD to support frequent safe releases, and using measurable evaluation criteria (especially End-to-End State Update Latency)[cite: 1]. It remains focused on engineering workflow and scalability readiness rather than research-driven novelty[cite: 1].
+
+\end{document}
