@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Bell, LayoutDashboard, BookOpen, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, BookOpen, ShieldCheck } from "lucide-react";
 
 const NAV_LINKS = [
   { to: "/", label: "Home", icon: BookOpen },
