@@ -1,36 +1,33 @@
-\documentclass[twoside,12pt,openright]{report}
+\documentclass[oneside,12pt,openany]{report}
 
 % ======================================================================
 %  TIET report layout (built in, so no external tietreport.cls is needed)
 % ======================================================================
 \makeatletter
 %% ===================================================
-%% Geometry: Page margins and asymmetric layout
+%% Geometry: Page margins (same on every page)
 %% ===================================================
-%% Configure margins for two-sided printing.
-%% Inner margin (binding edge) is wider for gutter;
-%% outer margins are narrower. Top/bottom margins
-%% accommodate headers/footers and content balance.
+%% Equal left and right margins keep the 6in text
+%% block in the same place on every page and centre
+%% the title page. Top/bottom margins accommodate
+%% headers/footers and content balance.
 \usepackage[
-  inner=1.5in,
-  outer=1in,
+  left=1.25in,
+  right=1.25in,
   top=1.8in,
   bottom=0.85in
 ]{geometry}
 
 %% ===================================================
-%% Fancyhdr: Alternating headers with page numbers
+%% Fancyhdr: Headers with page numbers
 %% ===================================================
-%% Left (even) pages: page number + title header.
-%% Right (odd) pages: project title + page number.
-%% Both placed on outer margin for binding edge
-%% clarity. Footer empty to maximize text area.
+%% All pages: page number + course header on the
+%% left. Footer empty to maximize text area.
 %% Header rule (0.5pt) provides visual separation.
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[LE]{\thepage \quad \@tpHeader}
-\fancyhead[RO]{\@tpTitle \quad \thepage}
+\fancyhead[L]{\thepage \quad \@tpHeader}
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\footrulewidth}{0pt}
 
@@ -199,9 +196,6 @@
 
 
 
-% Import images
-\usepackage{graphicx}
-
 % Extra packages required by the report content
 \usepackage{float}
 \usepackage{tabularx}
@@ -269,12 +263,12 @@
 
 % Main project title
 \ProjectTitle{%
-  Real-Time Library Seat Occupancy Management System%
+  SmartLib: Library Seat Allocator%
 }
 
 % Subtitle or project description
 \ProjectSubTitle{%
-  An IoT-Based Live Seat Availability System%
+  An IoT System for Real-Time Seat Monitoring and Management%
 }
 
 % Student information (up to 4 students)
@@ -308,12 +302,8 @@
 
 \begin{document}
 
-% Stop twoside's \flushbottom from stretching list/heading spacing on partly filled pages
+% Let partly filled pages end early instead of stretching the spacing
 \raggedbottom
-
-% Compact layout: start chapters on the next page instead of the next
-% right-hand page (removes blank pages). Delete this line to restore openright.
-\makeatletter\@openrightfalse\makeatother
 
 % Generate title page
 \maketitle
@@ -327,75 +317,67 @@
 
 \section{Background and Context}
 
-University libraries are among the most heavily used shared spaces on a campus, and demand
-peaks sharply around examinations and assignment deadlines. At such times students must
-physically walk through reading halls to discover where a seat is available. Conventional
-gate counters report how many people are inside the building, but not \emph{where} the free
-seats are. The result is wasted search time, continuous hallway movement and noise that
-disturbs students who are already studying.
+University libraries are busiest during exams and assignment deadlines. At these times,
+users have to walk through the reading halls to find a free seat. Gate counters show how many
+people are inside, but not \emph{where} the free seats are. This wastes time and creates noise
+that disturbs people who are studying.
 
-Low-cost Wi-Fi microcontrollers, proximity sensors and managed real-time cloud databases now make it feasible to monitor every seat and publish its state to any phone or display within a fraction of a second.
+Low-cost Wi-Fi boards, simple sensors and real-time cloud databases now make it possible to
+track every seat and show its status on any phone or screen within a second.
 
 \subsection{Problem Statement}
 \label{sec:problem}
 
-The current way of locating a study seat has three shortcomings, summarised in
-Table~\ref{tab:problems}.
+Finding a seat today has three main problems, listed in Table~\ref{tab:problems}.
 
 \begin{table}[H]
 \centering
 \small
-\renewcommand{\arraystretch}{1.15}
-\begin{tabular}{|p{0.2\linewidth}|p{0.43\linewidth}|p{0.26\linewidth}|}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabularx}{\linewidth}{|>{\raggedright\arraybackslash}p{0.2\linewidth}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}p{0.27\linewidth}|}
   \hline
-  \textbf{Problem} & \textbf{Description} & \textbf{Operational need} \\
+  \textbf{Problem} & \textbf{Description} & \textbf{What is needed} \\
   \hline
-  Manual fragmentation &
-  Students must physically navigate multiple floors and aisles during peak hours, causing
-  hallway noise and wasted search time. &
-  Remote, instant knowledge of free seats before walking to the hall. \\
+  Manual search &
+  Users walk across floors and aisles at busy times, which wastes time and creates noise. &
+  A way to see free seats before walking to the hall. \\
   \hline
-  Low transparency &
-  Static headcount boards at library gates give lagging aggregate metrics without showing
-  desk-level availability. &
-  Seat-level visibility rather than a single building-wide count. \\
+  No seat-level view &
+  Headcount boards at the gate show only a total count, not which desks are free. &
+  Status of each seat instead of one building-wide number. \\
   \hline
-  Administrative blindspot &
-  Staff lack real-time and historical analytics to balance traffic across reading halls or
-  to optimise HVAC and facility allocation. &
-  Live and historical utilisation analytics for facility planning. \\
+  No data for staff &
+  Staff have no live or past usage data to spread users across halls or plan facilities
+  such as cooling. &
+  Live and past usage reports for planning. \\
   \hline
-\end{tabular}
-\caption{Core problems and the corresponding operational need}
+\end{tabularx}
+\caption{Main problems and what is needed}
 \label{tab:problems}
 \end{table}
 
 \section{Project Objectives}
 
 \begin{enumerate}
-  \item \textbf{Detection:} Detect physical presence at every monitored study seat using
-    low-cost IR sensors.
-  \item \textbf{Noise filtering:} Filter sensor noise so that momentary obstructions do not
-    change a seat's state.
-  \item \textbf{Transmission:} Transmit seat states to the cloud over Wi-Fi with minimal
-    latency.
-  \item \textbf{Student view:} Present a live seat map and capacity metrics on mobile browsers
-    and on an entrance kiosk display.
-  \item \textbf{Admin view:} Give administrators an analytics dashboard for utilisation,
-    session time and peak-hour monitoring.
+  \item \textbf{Detection:} Detect whether each seat is in use with low-cost IR sensors.
+  \item \textbf{Noise filtering:} Ignore short disturbances, such as a passing hand, so a
+    seat's status does not flicker.
+  \item \textbf{Transmission:} Send seat status to the cloud over Wi-Fi with little delay.
+  \item \textbf{User view:} Show a live seat map and seat counts on phones and on a screen at
+    the entrance.
+  \item \textbf{Admin view:} Give staff a dashboard with usage, session time and busy hours.
 \end{enumerate}
 
 \subsection{Scope and Organisation of the Report}
 
-The system covers sensing, communication, cloud synchronisation and presentation for study
-seats in a library zone. It identifies only whether a seat is occupied; it does not capture
-images, identify individuals or enforce seat reservations. The prototype demonstrates the
-complete data path from a sensor to a browser, and the design scales to additional seats and
-zones by adding sensor nodes and database branches.
+The system covers sensing, sending, storing and displaying seat status for one library zone.
+It only detects whether a seat is in use. It does not take pictures, identify people or handle
+seat bookings. The prototype shows the full path from a sensor to a web browser, and more
+seats or zones can be added with more sensor nodes and database entries.
 
-Chapter~\ref{ch:method} covers the requirements, architecture, UML models and implementation;
-Chapter~\ref{ch:results} gives the test plan, discussion and limitations; and
-Chapter~\ref{ch:concl} concludes with future scope.
+Chapter~\ref{ch:method} covers the requirements, development model, design, diagrams and
+implementation. Chapter~\ref{ch:results} gives the test plan and limitations, and
+Chapter~\ref{ch:concl} concludes with future work.
 
 % ===== CHAPTER 2: METHODOLOGY & DESIGN =====
 
@@ -403,15 +385,15 @@ Chapter~\ref{ch:concl} concludes with future scope.
 \label{ch:method}
 
 \section{Requirements Analysis}
+\label{sec:req}
 
 \subsection{Stakeholders}
 
 \begin{itemize}
-  \item \textbf{Students:} Need to know which seats are free and how full the library is
-    before and while travelling to it.
-  \item \textbf{Library staff / administrators:} Need live occupancy and historical analytics
-    for traffic balancing and facility allocation.
-  \item \textbf{Sensor node (system actor):} Continuously senses seats and publishes state.
+  \item \textbf{Users:} Want to know which seats are free and how full the library is.
+  \item \textbf{Library staff / administrators:} Want live and past usage data to manage
+    the library.
+  \item \textbf{Sensor node (system actor):} Checks each seat and sends its status.
 \end{itemize}
 
 \subsection{Functional Requirements}
@@ -420,28 +402,28 @@ Chapter~\ref{ch:concl} concludes with future scope.
 \centering
 \small
 \renewcommand{\arraystretch}{1.1}
-\begin{tabularx}{\linewidth}{|l|X|}
+\begin{tabularx}{\linewidth}{|l|>{\raggedright\arraybackslash}X|}
   \hline
   \textbf{ID} & \textbf{Requirement} \\
   \hline
-  FR1 & Detect the presence of a person at each monitored seat using an active IR sensor. \\
+  FR1 & Detect whether a person is at each seat using an IR sensor. \\
   \hline
-  FR2 & Apply a 3-second software debounce window before a seat changes state. \\
+  FR2 & Change a seat's status only after the new reading stays the same for 3~seconds
+        (debounce). \\
   \hline
-  FR3 & The ESP32 node encodes binary seat states into a JSON payload and sends it over Wi-Fi
-        to the cloud database. \\
+  FR3 & The ESP32 sends seat status as JSON over Wi-Fi to the cloud database. \\
   \hline
-  FR4 & The cloud database keeps a synchronised state tree and notifies clients of changes
-        without manual refresh. \\
+  FR4 & The database stores the latest status and updates all screens without a page
+        refresh. \\
   \hline
-  FR5 & The student dashboard shows a floor map: vacant seats green, occupied seats red. \\
+  FR5 & The user dashboard shows a seat map: free seats in green, taken seats in red. \\
   \hline
-  FR6 & The dashboards show total, occupied and available seats and the occupancy rate. \\
+  FR6 & The dashboards show total, taken and free seats, and the percentage in use. \\
   \hline
-  FR7 & The entrance kiosk displays live capacity and availability for the zone. \\
+  FR7 & The entrance screen shows live seat availability for the zone. \\
   \hline
-  FR8 & The administrator dashboard shows average session time, peak hour, weekly trend,
-        hourly peak distribution and the occupied/available split. \\
+  FR8 & The admin dashboard shows average session time, busiest hour, weekly trend, hourly
+        usage and the taken/free split. \\
   \hline
 \end{tabularx}
 \caption{Functional requirements}
@@ -454,67 +436,120 @@ Chapter~\ref{ch:concl} concludes with future scope.
 \centering
 \small
 \renewcommand{\arraystretch}{1.1}
-\begin{tabularx}{\linewidth}{|l|l|X|}
+\begin{tabularx}{\linewidth}{|l|l|>{\raggedright\arraybackslash}X|}
   \hline
   \textbf{ID} & \textbf{Attribute} & \textbf{Requirement} \\
   \hline
-  NFR1 & Performance & Sub-second cloud-to-client synchronisation (excluding the deliberate
-                       3-s debounce). \\
+  NFR1 & Performance & Screens update within one second of a database change (not counting
+                       the 3-second debounce). \\
   \hline
-  NFR2 & Reliability & Momentary obstructions must not cause flickering of seat colours. \\
+  NFR2 & Reliability & Short disturbances must not make seat colours flicker. \\
   \hline
-  NFR3 & Usability   & The student interface is responsive and usable on a mobile browser. \\
+  NFR3 & Usability   & The user interface works well on a phone browser. \\
   \hline
-  NFR4 & Scalability & Seats and zones can be added without redesigning the data model. \\
+  NFR4 & Scalability & New seats and zones can be added without changing the design. \\
   \hline
-  NFR5 & Cost        & Inexpensive off-the-shelf sensing hardware. \\
+  NFR5 & Cost        & Uses cheap, easily available hardware. \\
   \hline
-  NFR6 & Privacy     & No images or personal identifiers; only a binary presence state is
-                       recorded. \\
+  NFR6 & Privacy     & No images or personal data; only ``in use'' or ``free'' is stored. \\
   \hline
 \end{tabularx}
 \caption{Non-functional requirements}
 \label{tab:nfr}
 \end{table}
 
+\section{Software Development Process Model}
+\label{sec:process}
+
+The project follows the \emph{Incremental Development Model}~\cite{sommerville,pressman}.
+The requirements in Section~\ref{sec:req} are set first. The system is then built in parts
+(increments). Each part is designed, built and tested, then joined to the parts already
+finished, so every stage ends with something that works (Figure~\ref{fig:process}).
+
+\begin{figure}[H]
+\centering
+\fitfig[0.3]{%
+\begin{tikzpicture}[
+  req/.style={rectangle,rounded corners=3pt,draw,thick,fill=gray!20,minimum height=1.2cm,
+              text width=2.6cm,align=center,font=\footnotesize},
+  inc/.style={rectangle,rounded corners=3pt,draw,thick,fill=white,minimum height=1.2cm,
+              text width=4.6cm,align=center,font=\footnotesize},
+  incout/.style={font=\scriptsize\itshape,align=left,anchor=west}]
+  \node[req] (r)  at (0,0) {Requirements\\analysis};
+  \node[inc] (i1) at (4.8,0)     {\textbf{Increment 1}\\Hardware and sensor setup};
+  \node[inc] (i2) at (6.4,-1.6)  {\textbf{Increment 2}\\ESP32 firmware and debounce logic};
+  \node[inc] (i3) at (8.0,-3.2)  {\textbf{Increment 3}\\Firebase database integration};
+  \node[inc] (i4) at (9.6,-4.8)  {\textbf{Increment 4}\\React web application};
+  \node[inc,fill=gray!12] (i5) at (11.2,-6.4) {\textbf{Increment 5}\\System integration,
+                                               testing and refinement};
+  \draw[->,thick] (r) -- (i1);
+  \draw[->,thick] (i2.north |- i1.south) -- (i2.north);
+  \draw[->,thick] (i3.north |- i2.south) -- (i3.north);
+  \draw[->,thick] (i4.north |- i3.south) -- (i4.north);
+  \draw[->,thick] (i5.north |- i4.south) -- (i5.north);
+  \node[incout] at ([xshift=3pt]i1.east) {sensors read reliably};
+  \node[incout] at ([xshift=3pt]i2.east) {confirmed seat states};
+  \node[incout] at ([xshift=3pt]i3.east) {states stored in cloud};
+  \node[incout] at ([xshift=3pt]i4.east) {live dashboards};
+  \draw[->,thick,dashed] (i5.west) -| (r.south);
+  \node[fl,anchor=east] at (-0.15,-3.2) {feedback and\\refinement};
+  \node[draw,rounded corners,font=\scriptsize,align=center,inner sep=4pt] at (2.6,-5.2)
+       {Within each increment:\\design $\rightarrow$ implement $\rightarrow$ test};
+\end{tikzpicture}}
+\caption{Incremental development model for the Library Seat Allocator}
+\label{fig:process}
+\end{figure}
+
+Increment 1 fits the IR sensors to the ESP32 and checks their output at each seat.
+Increment 2 adds sensor reading and the 3-second debounce (FR1, FR2). Increment 3 sends the
+seat status to Firebase as JSON (FR3, FR4). Increment 4 builds the user dashboard, admin
+dashboard and entrance screen (FR5--FR8). Increment 5 joins everything and tests it with the
+cases in Chapter~\ref{ch:results}; any problems are fixed in the earlier parts.
+
+\textbf{Why this model.} The project has hardware, firmware, a cloud database and a web app,
+and each part depends on the one before it. Building them one at a time lets each part be
+tested on its own, so a fault is easy to locate. Each increment also gives a working result
+that can be shown, and later parts can change without starting over.
+
 \section{System Architecture}
 
 \subsection{High-Level Design}
 
-The system is organised in three layers, shown in Figure~\ref{fig:arch}: an \emph{edge layer}
-that senses and encodes seat state, a \emph{cloud layer} that stores and distributes it, and a
-\emph{presentation layer} that renders it for students and staff.
+The system has three layers (Figure~\ref{fig:arch}): the \emph{edge layer} senses the seats,
+the \emph{cloud layer} stores and shares their status, and the \emph{presentation layer}
+shows it to users and staff.
 
 \begin{figure}[H]
 \centering
 \fitfig{%
-\begin{tikzpicture}[node distance=2.1cm,blk/.append style={text width=2.3cm,font=\footnotesize}]
-  \node[blk] (ir)  {Active IR\\Proximity Sensors};
-  \node[blk,right=of ir]  (esp) {ESP32 Micro-controller Node};
-  \node[blk,right=of esp] (fb)  {Firebase\\Realtime Database};
-  \node[blk,right=of fb]  (web) {React Web App \&\\Entrance Kiosk};
-  \draw[->,thick] (ir)  -- node[fl,above]{digital\\signal} (esp);
-  \draw[->,thick] (esp) -- node[fl,above]{Wi-Fi\\JSON} (fb);
-  \draw[->,thick] (fb)  -- node[fl,above]{WebSocket\\events} (web);
+\begin{tikzpicture}[blk/.append style={text width=2.3cm,minimum height=1.9cm,font=\footnotesize}]
+  \node[blk] (ir)  at (0,0)    {Active IR\\Proximity Sensors};
+  \node[blk] (esp) at (3.9,0)  {ESP32 Micro-controller Node};
+  \node[blk] (fb)  at (9.3,0)  {Firebase\\Realtime Database};
+  \node[blk] (web) at (14.7,0) {React Web App \&\\Entrance Screen};
   \node[draw=black,dashed,rounded corners,fit=(ir)(esp),inner sep=9pt,
-        label={[font=\footnotesize\bfseries,text=black]above:Edge layer}] {};
+        label={[font=\footnotesize\bfseries,text=black]above:Edge layer}] (edge) {};
   \node[draw=black,dashed,rounded corners,fit=(fb),inner sep=9pt,
-        label={[font=\footnotesize\bfseries,text=black]above:Cloud layer}] {};
+        label={[font=\footnotesize\bfseries,text=black]above:Cloud layer}] (cloud) {};
   \node[draw=black,dashed,rounded corners,fit=(web),inner sep=9pt,
-        label={[font=\footnotesize\bfseries,text=black]above:Presentation layer}] {};
+        label={[font=\footnotesize\bfseries,text=black]above:Presentation layer}] (pres) {};
+  \draw[->,thick] (ir)  -- node[fl,above]{digital\\signal} (esp);
+  \draw[->,thick] (esp) -- node[fl,above=2pt]{JSON over\\Wi-Fi (HTTP)} (fb);
+  \draw[->,thick] (fb)  -- node[fl,above=2pt]{WebSocket\\events} (web);
 \end{tikzpicture}}
 \caption{End-to-end system architecture}
 \label{fig:arch}
 \end{figure}
 
-Active IR sensors on the seats feed an ESP32 node~\cite{esp32}, which publishes debounced seat states as JSON over Wi-Fi to a Firebase Realtime Database~\cite{firebase}; the database pushes WebSocket events to the React web application and entrance kiosk~\cite{react}.
+The IR sensors send signals to the ESP32~\cite{esp32}, which sends the confirmed seat status
+as JSON over Wi-Fi to the Firebase Realtime Database~\cite{firebase}. The database then pushes
+each change to the React web app and the entrance screen~\cite{react}.
 
 \subsection{Seating Layout}
 
-Figure~\ref{fig:seating} shows the physical arrangement. Each seat has an IR sensor mounted
-at the table edge facing the chair, wired to a central controller that connects to an ESP32
-Wi-Fi node. Here a vacant seat is drawn white and an occupied seat dark; the web dashboards
-show green and red.
+Figure~\ref{fig:seating} shows the seat arrangement. Each seat has an IR sensor at the table
+edge, facing the chair. The sensors are wired to a controller linked to the ESP32. In the
+figure, a free seat is white and a taken seat is dark; the dashboards use green and red.
 
 \begin{figure}[H]
 \centering
@@ -549,121 +584,41 @@ show green and red.
 \label{fig:seating}
 \end{figure}
 
-\subsection{Hardware Design}
+\subsection{Technical Stack}
+\label{sec:stack}
 
-\begin{table}[H]
-\centering
-\small
-\renewcommand{\arraystretch}{1.1}
-\begin{tabularx}{\linewidth}{|l|X|}
-  \hline
-  \textbf{Component} & \textbf{Role} \\
-  \hline
-  ESP32 development board & Reads the GPIO inputs, runs the debounce logic, builds JSON
-    payloads and connects to the library Wi-Fi~\cite{esp32}. \\
-  \hline
-  Active IR proximity sensors & One per seat; output a digital presence signal. \\
-  \hline
-  Push buttons (two) & Auxiliary manual inputs on GPIO~18 and GPIO~19, returning to ground. \\
-  \hline
-  5\,V power supply & Powers the ESP32; an optional DC--DC step-down module can regulate
-    the input. \\
-  \hline
-  Perforated board, jumper wires & Mechanical and electrical assembly of the prototype. \\
-  \hline
-\end{tabularx}
-\caption{Hardware components of the sensing node}
-\label{tab:components}
-\end{table}
+\begin{itemize}
+  \item \textbf{Hardware:} ESP32 development board~\cite{esp32}; one IR proximity sensor per
+    seat (GPIO~27 and GPIO~28 in the prototype); two push buttons on GPIO~18 and GPIO~19;
+    a 5\,V power supply; perforated board and jumper wires.
+  \item \textbf{Framework/Language:} C++ with the Arduino framework for the ESP32 firmware;
+    React with JavaScript for the web app~\cite{react}.
+  \item \textbf{Database:} Firebase Realtime Database~\cite{firebase}. Seat status is kept
+    as JSON under \texttt{library/zone1}, with one entry per seat (\texttt{s1},
+    \texttt{s2}, \ldots) holding a true/false \texttt{occupied} value.
+  \item \textbf{Libraries:} the ESP32 \texttt{WiFi} and \texttt{HTTPClient} libraries for
+    sending data; the Firebase SDK in the web app for live updates; SVG for drawing the
+    seat map.
+  \item \textbf{Tools:} an Arduino-compatible IDE to build and upload the firmware; a web
+    browser on a laptop and a phone for testing the dashboards.
+\end{itemize}
 
-\textbf{Circuit layout.} The schematic in Figure~\ref{fig:circuit} shows the reference wiring. The 5\,V supply and
-ground feed the ESP32. IR Sensor~1 and IR Sensor~2 connect to GPIO~27 and GPIO~28, and two
-push buttons connect to GPIO~18 and GPIO~19 and return to ground.
+\section{System Modeling Diagrams}
+\label{sec:models}
 
-\begin{figure}[H]
-\centering
-\fitfig{%
-\begin{tikzpicture}
-  \node[blk,text width=2.0cm] (psu) at (0,0) {Power Supply\\(5\,V)};
-  \node[draw=black,fill=gray!10,thick,rounded corners=4pt,
-        minimum width=3.4cm,minimum height=3.2cm,font=\bfseries] (esp) at (5,0) {ESP32};
-  \node[blk,text width=2.0cm] (ir1) at (10.2,1.1)  {IR Sensor 1};
-  \node[blk,text width=2.0cm] (ir2) at (10.2,-1.1) {IR Sensor 2};
-  \node[blk,text width=1.7cm] (b1) at (3.6,-3.9) {Button 1};
-  \node[blk,text width=1.7cm] (b2) at (6.4,-3.9) {Button 2};
-  \draw[->,very thick]
-     ([yshift=3mm]psu.east) -- node[above,font=\scriptsize]{5V} ([yshift=3mm]esp.west);
-  \draw[->,thick]
-     ([yshift=-3mm]psu.east) -- node[below,font=\scriptsize]{GND} ([yshift=-3mm]esp.west);
-  \draw[->,thick,dashed]
-     ([yshift=1.1cm]esp.east) -- node[above,font=\scriptsize]{GPIO 27} (ir1.west);
-  \draw[->,thick,dashed]
-     ([yshift=-1.1cm]esp.east) -- node[below,font=\scriptsize]{GPIO 28} (ir2.west);
-  \draw[->,thick,densely dotted]
-     ([xshift=-1.2cm]esp.south) -- node[left,font=\scriptsize,pos=0.3]{GPIO 18} (b1.north);
-  \draw[->,thick,densely dotted]
-     ([xshift=1.2cm]esp.south) -- node[right,font=\scriptsize]{GPIO 19} (b2.north);
-  \gnd{b1.south}
-  \gnd{b2.south}
-  \node[font=\tiny,below] at ($(b1.south)+(0,-0.55)$) {GND};
-  \node[font=\tiny,below] at ($(b2.south)+(0,-0.55)$) {GND};
-  \node[draw,rounded corners,font=\scriptsize,align=left,anchor=north west,inner sep=4pt]
-     at (-1.6,-2.3) {\textbf{Legend}\\
-     \tikz[baseline=-0.5ex]\draw[very thick] (0,0)--(0.8,0);~5\,V power\\
-     \tikz[baseline=-0.5ex]\draw[thick] (0,0)--(0.8,0);~GND\\
-     \tikz[baseline=-0.5ex]\draw[thick,dashed] (0,0)--(0.8,0);~Signal (IR sensors)\\
-     \tikz[baseline=-0.5ex]\draw[thick,densely dotted] (0,0)--(0.8,0);~Signal (buttons)};
-\end{tikzpicture}}
-\caption{Circuit layout of the ESP32 sensing node}
-\label{fig:circuit}
-\end{figure}
-
-\subsection{Data Design}
-
-The Firebase Realtime Database stores state as a JSON tree~\cite{firebase}. Each seat is a
-leaf holding a boolean occupancy flag. Because every client subscribes to the same tree, a
-single write by the ESP32 reaches all connected dashboards. Figure~\ref{fig:tree} shows the
-schema and Listing~\ref{lst:json} the corresponding payload.
-
-\begin{figure}[H]
-\centering
-\fitfig{%
-\begin{tikzpicture}[
-  level distance=1.25cm,
-  tn/.style={draw,rounded corners=2pt,fill=white,font=\footnotesize,minimum height=0.6cm,align=center},
-  level 3/.style={sibling distance=3.0cm}]
-  \node[tn] {/ (root)}
-    child { node[tn] {library}
-      child { node[tn] {zone1}
-        child { node[tn] {s1\\occupied: false} }
-        child { node[tn,fill=gray!35] {s2\\occupied: true} }
-        child { node[tn] {s3\\occupied: false} }
-      }
-    };
-\end{tikzpicture}}
-\caption{JSON state-tree schema (S2 occupied, S1 and S3 vacant)}
-\label{fig:tree}
-\end{figure}
-
-\Needspace{9\baselineskip}
-\begin{lstlisting}[style=code,language=json,caption={Illustrative seat-state payload},label={lst:json}]
-{ "library": { "zone1": {
-    "s1": { "occupied": false },
-    "s2": { "occupied": true  },
-    "s3": { "occupied": false } } } }
-\end{lstlisting}
-
-\section{UML and Process Models}
+Each diagram shows the system from a different angle: who uses it (use case), how data
+moves (DFDs), what happens over time (sequence diagram and state machine) and the order of
+steps in the firmware (flowchart).
 
 \subsection{Use Case Diagram}
 
-Figure~\ref{fig:usecase} shows the actors and their interactions with the system. Students use
-the live seat map and entrance availability views, administrators use the analytics views, and
-the sensor node detects presence and publishes state~\cite{uml}.
+Figure~\ref{fig:usecase} shows who uses the system and how~\cite{uml}. Users view the seat
+map and availability, staff view the reports, and the sensor node detects seats and sends
+their status.
 
 \begin{figure}[H]
 \centering
-\fitfig[0.5]{%
+\fitfig[0.42]{%
 \begin{tikzpicture}[
   uc/.style={ellipse,draw,fill=white,minimum height=0.9cm,text width=4.0cm,align=center,font=\footnotesize}]
   \node[uc] (uc1) at (6.25,3.4)  {View live seat map};
@@ -674,8 +629,8 @@ the sensor node detects presence and publishes state~\cite{uml}.
   \node[uc] (uc6) at (6.25,-2.6) {Detect seat presence};
   \node[uc] (uc7) at (6.25,-4.3) {Publish seat state to cloud};
   \node[draw,thick,dashed,rounded corners,fit=(uc1)(uc2)(uc3)(uc4)(uc5)(uc6)(uc7),inner sep=12pt,
-        label={[font=\footnotesize\bfseries]above:Library Seat Occupancy System}] (sys) {};
-  \actor{0}{1.0}{Student}
+        label={[font=\footnotesize\bfseries]above:SmartLib: Library Seat Allocator}] (sys) {};
+  \actor{0}{1.0}{User}
   \actor{11.6}{0.6}{Library Staff\\(Admin)}
   \actor{11.6}{-3.4}{Sensor Node}
   \draw (0.3,1.25) -- (uc1.west);
@@ -694,19 +649,18 @@ the sensor node detects presence and publishes state~\cite{uml}.
 
 \subsection{Data Flow Diagrams}
 
-The context-level diagram (Figure~\ref{fig:dfd0}) treats the whole system as one process, and
-the level-1 diagram (Figure~\ref{fig:dfd1}) decomposes it into four processes and one data
-store.
+The level-0 diagram (Figure~\ref{fig:dfd0}) shows the whole system as one process. The
+level-1 diagram (Figure~\ref{fig:dfd1}) splits it into four processes and one data store.
 
 \begin{figure}[H]
 \centering
-\fitfig[0.36]{%
+\fitfig[0.27]{%
 \begin{tikzpicture}[
   ent/.style={rectangle,draw,thick,fill=white,minimum width=2.4cm,minimum height=1cm,align=center,font=\footnotesize},
   proc/.style={circle,draw,thick,fill=white,minimum size=3.1cm,align=center,font=\footnotesize}]
   \node[ent]  (sens) at (0,0) {IR Sensor\\Array};
-  \node[proc] (sys)  at (6,0) {\textbf{0}\\Library Seat\\Occupancy\\System};
-  \node[ent]  (stud) at (12.6,2.6)  {Student};
+  \node[proc] (sys)  at (6,0) {\textbf{0}\\SmartLib:\\Library Seat\\Allocator};
+  \node[ent]  (stud) at (12.6,2.6)  {User};
   \node[ent]  (adm)  at (12.6,-2.6) {Library Staff};
   \draw[->,thick] (sens) -- node[fl,above]{presence\\signals} (sys);
   \draw[->,thick] (sys.75) -- node[fl,above,sloped]{live seat map, availability} ([yshift=5mm]stud.west);
@@ -731,7 +685,7 @@ store.
   \node[proc] (p3)   at (11.1,0) {\textbf{3.0}\\Update\\Cloud State};
   \node[store](d1)   at (11.1,-2.5) {D1 \quad Firebase state tree \& history};
   \node[proc] (p4)   at (11.1,-4.8) {\textbf{4.0}\\Render\\Dashboards};
-  \node[ent]  (stud) at (4.2,-4.0)  {Student};
+  \node[ent]  (stud) at (4.2,-4.0)  {User};
   \node[ent]  (adm)  at (4.2,-5.6)  {Library Staff};
   \draw[->,thick] (sens) -- node[fl,above]{raw IR\\signal} (p1);
   \draw[->,thick] (p1) -- node[fl,above]{confirmed\\seat state} (p2);
@@ -745,59 +699,73 @@ store.
 \label{fig:dfd1}
 \end{figure}
 
-\subsection{Behavioural Models}
+\subsection{Sequence Diagram}
 
-\textbf{Sequence diagram.} 
-Figure~\ref{fig:seq} follows one seat-occupancy event from a student sitting down to the seat
-turning red on every connected dashboard.
+Figure~\ref{fig:seq} follows one event, from a user sitting down to the seat turning red on
+every dashboard. The ESP32 sends the update only after the reading stays the same for
+3~seconds.
 
 \begin{figure}[H]
 \centering
 \fitfig[0.36]{%
 \begin{tikzpicture}[x=1cm,y=1cm]
-  \foreach \x/\n in {0/Student,3.2/IR Sensor,6.4/ESP32,9.6/Firebase RTDB,12.8/Web Client}{
+  \foreach \x/\n in {0/User,3.2/IR Sensor,6.4/ESP32,9.6/Firebase RTDB,12.8/Web Client}{
     \node[draw,fill=gray!12,rounded corners=2pt,minimum width=2.3cm,minimum height=0.7cm,font=\footnotesize] at (\x,0) {\n};
-    \draw[dashed] (\x,-0.35) -- (\x,-6.6);
+    \draw[dashed] (\x,-0.35) -- (\x,-7.0);
   }
+  % activation bar: ESP32 waiting for the debounce window
+  \draw[thick,fill=gray!25] (6.3,-2.0) rectangle (6.5,-3.9);
   \draw[->,thick] (0,-1.0)   -- node[above,font=\scriptsize]{occupies seat} (3.2,-1.0);
-  \draw[->,thick] (3.2,-2.0) -- node[above,font=\scriptsize]{presence signal} (6.4,-2.0);
-  \draw[->,thick] (6.4,-2.9) -- (7.5,-2.9) -- (7.5,-3.5) -- (6.4,-3.5);
-  \node[font=\scriptsize,right] at (7.55,-3.2) {hold 3\,s};
-  \draw[->,thick] (6.4,-4.4) -- node[above,font=\scriptsize]{write state (JSON)} (9.6,-4.4);
+  \draw[->,thick] (3.2,-2.0) -- node[above,font=\scriptsize]{presence (LOW)} (6.3,-2.0);
+  \draw[->,thick] (6.5,-2.6) -- (7.6,-2.6) -- (7.6,-3.4) -- (6.5,-3.4);
+  \node[font=\scriptsize,right,align=left] at (7.65,-3.0) {stable $\geq 3$\,s:\\confirm state};
+  \draw[->,thick] (6.5,-4.4) -- node[above,font=\scriptsize]{HTTP write (JSON)} (9.6,-4.4);
   \draw[->,thick] (9.6,-5.2) -- node[above,font=\scriptsize]{WebSocket event} (12.8,-5.2);
-  \draw[->,thick,dashed] (12.8,-6.2) -- node[above,font=\scriptsize]{seat turns red} (0,-6.2);
+  \draw[->,thick] (12.8,-5.7) -- (13.7,-5.7) -- (13.7,-6.2) -- (12.8,-6.2);
+  \node[font=\scriptsize,right] at (13.75,-5.95) {re-render seat};
+  \draw[->,thick,dashed] (12.8,-6.7) -- node[above,font=\scriptsize,fill=white,inner sep=1pt]{seat shown red (occupied)} (0,-6.7);
 \end{tikzpicture}}
-\caption{Sequence diagram for a seat-occupancy event}
+\caption{Sequence diagram for a seat-occupancy event, including the 3-second debounce}
 \label{fig:seq}
 \end{figure}
 
-\textbf{Seat state machine.} Each seat is modelled as the four-state machine in Figure~\ref{fig:fsm}. A seat changes
-between \textsc{Vacant} and \textsc{Occupied} only after the new reading has been stable for
-3~seconds; a shorter disturbance returns it to the previous confirmed state (dashed
-transitions).
+\subsection{Seat State Machine}
+
+Each seat follows the four states in Figure~\ref{fig:fsm}. \textsc{Vacant} and
+\textsc{Occupied} are the states sent to the database. In the two \textsc{Pending} states the
+firmware waits to see if the new reading holds. If it holds for 3~seconds, the status changes
+and is sent. If it changes back sooner (dashed arrows), the seat keeps its old status and
+nothing is sent.
 
 \begin{figure}[H]
 \centering
 \fitfig[0.36]{%
 \begin{tikzpicture}[
-  st/.style={circle,draw,thick,minimum size=1.9cm,align=center,font=\footnotesize}]
-  \node[st,fill=white] (v)  at (0,0)     {VACANT};
-  \node[st,fill=gray!15] (p1) at (4.6,0)  {PENDING\\OCCUPIED};
-  \node[st,fill=gray!45] (o)  at (9.2,0)   {OCCUPIED};
-  \node[st,fill=gray!15] (p2) at (4.6,-3.4) {PENDING\\VACANT};
-  \draw[->,thick] (v) -- node[fl,below]{presence\\detected} (p1);
-  \draw[->,thick] (p1) -- node[fl,above]{stable\\$\geq 3$\,s} (o);
-  \draw[->,thick] (o) to[bend left=15] node[fl,below right]{presence\\lost} (p2);
-  \draw[->,thick] (p2) to[bend left=15] node[fl,below left]{stable\\$\geq 3$\,s} (v);
-  \draw[->,thick,dashed] (p1) to[bend right=40] node[fl,above]{glitch $<3$\,s} (v);
-  \draw[->,thick,dashed] (p2) to[bend left=15] node[fl,left,pos=0.5]{regained\\$<3$\,s} (o);
-  \node[fl,anchor=north] at (4.6,-4.6) {Dashed arrows: transient disturbance filtered by the debounce window.};
+  st/.style={circle,draw,thick,minimum size=2.0cm,align=center,font=\footnotesize}]
+  \node[st,fill=white]   (v)  at (0,0)    {VACANT};
+  \node[st,fill=gray!15] (p1) at (5,2.2)  {PENDING\\OCCUPIED};
+  \node[st,fill=gray!45] (o)  at (10,0)   {OCCUPIED};
+  \node[st,fill=gray!15] (p2) at (5,-2.2) {PENDING\\VACANT};
+  \draw[<-,thick] (v.west) -- ++(-1.0,0) node[fl,left]{start};
+  \draw[->,thick] (v)  to[bend left=12]  node[fl,above left]{presence\\detected} (p1);
+  \draw[->,thick] (p1) to[bend left=12]  node[fl,above right]{stable $\geq 3$\,s\\/ publish} (o);
+  \draw[->,thick] (o)  to[bend left=12]  node[fl,below right]{presence\\lost} (p2);
+  \draw[->,thick] (p2) to[bend left=12]  node[fl,below left]{stable $\geq 3$\,s\\/ publish} (v);
+  \draw[->,thick,dashed] (p1) to[bend left=12] node[fl,below right,pos=0.45]{lost\\$<3$\,s} (v);
+  \draw[->,thick,dashed] (p2) to[bend left=12] node[fl,above left,pos=0.45]{regained\\$<3$\,s} (o);
+  \node[fl,anchor=north] at (5,-3.6) {Solid: confirmed change (published). \quad
+        Dashed: transient disturbance filtered by the debounce window (not published).};
 \end{tikzpicture}}
 \caption{Seat state machine with 3-second debounce}
 \label{fig:fsm}
 \end{figure}
 
-\textbf{Firmware flowchart.} The main loop of the ESP32 firmware is shown in Figure~\ref{fig:flow}.
+\subsection{ESP32 Firmware Flowchart}
+
+Figure~\ref{fig:flow} shows the order of steps in the firmware. After start-up, the loop
+reads each sensor, checks whether the reading has changed and held for 3~seconds, and sends
+an update only when a seat's status changes. The state machine describes one seat; the
+flowchart describes the program.
 
 \begin{figure}[H]
 \centering
@@ -808,11 +776,11 @@ transitions).
   dec/.style={diamond,aspect=3.2,draw,thick,fill=gray!12,inner sep=1pt,font=\footnotesize,align=center}]
   \node[term] (start) at (0,0)    {Start};
   \node[prc]  (init)  at (0,-1.2) {Initialise GPIO pins, Wi-Fi and database endpoint};
-  \node[prc]  (read)  at (0,-2.5) {Read all IR sensor pins};
+  \node[prc]  (read)  at (0,-2.5) {Read IR sensor input of each seat};
   \node[dec]  (d1)    at (0,-4.1) {Raw reading differs\\from confirmed state?};
   \node[dec]  (d2)    at (0,-6.0) {Stable for $\geq 3$\,s?};
   \node[prc]  (upd)   at (6.4,-6.0) {Update confirmed state and build JSON payload};
-  \node[prc]  (send)  at (6.4,-7.6) {Send payload to Firebase over Wi-Fi};
+  \node[prc]  (send)  at (6.4,-7.6) {Send payload to Firebase over Wi-Fi (HTTP)};
   \draw[->,thick] (start) -- (init);
   \draw[->,thick] (init) -- (read);
   \draw[->,thick] (read) -- (d1);
@@ -835,11 +803,11 @@ transitions).
 \subsection{Firmware (ESP32)}
 % (ESP32)}
 
-The firmware polls the IR pins, applies the 3-second debounce per seat and publishes the
-confirmed states as JSON. Listing~\ref{lst:fw} is an illustrative implementation of this
-logic; pin numbers follow Figure~\ref{fig:circuit}.
+The firmware reads the IR pins, applies the 3-second debounce to each seat and sends the
+confirmed status as JSON. Listing~\ref{lst:fw} shows this logic; pin numbers match
+Section~\ref{sec:stack}.
 
-\Needspace{17\baselineskip}
+\Needspace{30\baselineskip}
 \begin{lstlisting}[style=code,language=C++,caption={Illustrative firmware logic for debounce and publishing},label={lst:fw}]
 constexpr uint32_t DEBOUNCE_MS = 3000;   // 3-second debounce window
 struct Seat { uint8_t pin; bool confirmed, candidate; uint32_t changedAt; };
@@ -871,26 +839,24 @@ void loop() {
 
 \subsection{Cloud Layer and Web Application}
 
-The Firebase Realtime Database holds the state tree of Figure~\ref{fig:tree}. Clients attach
-listeners to the tree and receive updates as events over a persistent WebSocket connection, so
-no polling is required.
+The Firebase Realtime Database holds the seat status described in Section~\ref{sec:stack}.
+The web app listens to the database and receives each change over an open WebSocket
+connection, so it never needs to ask for updates.
 
-The web application is built with React~\cite{react} and branded \emph{SmartLib}. It has a
-\emph{Student} view and an \emph{Admin} view, reachable from the navigation bar. The floor map
-is made of SVG nodes whose fill colour is bound to each seat's occupancy flag, so a database
-update re-renders the affected seat immediately.
+The web app, called \emph{SmartLib}, is built with React~\cite{react}. It has a
+\emph{User} view and an \emph{Admin} view in the navigation bar. Each seat on the map is an
+SVG shape whose colour follows its \texttt{occupied} value, so it updates as soon as the
+database changes.
 
-\textbf{Student dashboard.} Shows live capacity metrics and the seat layout. Summary cards
-report total, occupied and available seats and the occupancy rate (in the example shown: 4
-seats, 2 occupied, 2 available, 50\%). A seat-layout panel shows seats S01--S04 around a study
-table; available seats are green and occupied seats are red.
+\textbf{User dashboard.} Cards show total, taken and free seats and the percentage in use
+(for example: 4 seats, 2 taken, 2 free, 50\%). A seat map shows seats S01--S04 around a table,
+with free seats in green and taken seats in red.
 
-\textbf{Admin dashboard.} Provides utilisation analytics. Summary cards report total seats,
-occupied seats, average session time and the peak hour. A weekly occupancy trend, an hourly
-peak-hours histogram and a donut chart of the available/occupied split support traffic
-balancing and facility planning.
+\textbf{Admin dashboard.} Cards show total seats, taken seats, average session time and the
+busiest hour. Charts show the weekly trend, hourly usage and the taken/free split, to help
+staff plan.
 
-\textbf{Entrance kiosk.} The same application shows live capacity at the library gate.
+\textbf{Entrance screen.} The same app shows live seat availability at the library gate.
 
 % ===== CHAPTER 3: RESULTS & EVALUATION =====
 
@@ -899,38 +865,38 @@ balancing and facility planning.
 
 \section{Testing Methodology}
 
-The planned test cases in Table~\ref{tab:tests} verify the functional and non-functional
-requirements of Chapter~\ref{ch:method}.
+The planned tests in Table~\ref{tab:tests} check the requirements from
+Chapter~\ref{ch:method}.
 
 \begin{table}[H]
 \centering
-\footnotesize
-\renewcommand{\arraystretch}{1.0}
-\begin{tabularx}{\linewidth}{|l|>{\raggedright\arraybackslash}p{0.34\linewidth}|X|l|}
+\small
+\renewcommand{\arraystretch}{1.1}
+\begin{tabularx}{\linewidth}{|l|>{\raggedright\arraybackslash}p{0.3\linewidth}|>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}p{0.19\linewidth}|}
   \hline
   \textbf{ID} & \textbf{Scenario} & \textbf{Expected outcome} & \textbf{Req.} \\
   \hline
-  T1 & A person occupies a vacant seat & After the 3-s debounce the seat turns red on all
-       dashboards & FR1, FR2, FR5 \\
+  T1 & A person sits in a free seat & After 3\,s the seat turns red on all dashboards
+       & FR1, FR2, FR5 \\
   \hline
   T2 & The person leaves the seat & After 3\,s the seat turns green & FR1, FR2, FR5 \\
   \hline
-  T3 & A hand or bag passes the sensor for less than 3\,s & No state change is published
+  T3 & A hand or bag passes the sensor for less than 3\,s & No change is sent
        & FR2, NFR2 \\
   \hline
-  T4 & Two clients are open simultaneously & Both update from the same database event
-       without refresh & FR4 \\
+  T4 & Two screens are open at once & Both update together without a refresh
+       & FR4 \\
   \hline
-  T5 & Occupancy counts are inspected & Occupied $+$ available equals total seats; the
-       rate is correct & FR6 \\
+  T5 & Seat counts are checked & Taken $+$ free equals total seats; the percentage is
+       correct & FR6 \\
   \hline
-  T6 & The Wi-Fi connection drops and returns & The node resumes publishing and dashboards
-       show the current state & NFR1 \\
+  T6 & Wi-Fi drops and comes back & The node sends updates again and dashboards show the
+       current status & NFR1 \\
   \hline
-  T7 & The kiosk page is opened at the gate & Live capacity matches the student dashboard
+  T7 & The entrance screen is opened at the gate & It matches the user dashboard
        & FR7 \\
   \hline
-  T8 & Admin dashboard is opened & Session time, peak hour and charts are displayed & FR8 \\
+  T8 & The admin dashboard is opened & Session time, busiest hour and charts are shown & FR8 \\
   \hline
 \end{tabularx}
 \caption{Test cases and expected outcomes}
@@ -939,16 +905,15 @@ requirements of Chapter~\ref{ch:method}.
 
 \section{Analysis}
 
-The prototype demonstrates the complete data path: an IR sensor feeding an ESP32 node, a JSON
-state in a cloud database, and browser dashboards updated through WebSocket events. Seat-level
-sensing removes the main weakness of gate counters, and the 3-second debounce keeps the colour
-indicators stable.
+The prototype shows the full path: IR sensor to ESP32, ESP32 to the cloud database, and
+database to live browser dashboards. Sensing each seat fixes the main weakness of gate
+counters, and the 3-second debounce keeps seat colours steady.
 
 \subsection{Limitations}
 
-An IR sensor detects an obstruction, not a person, so an object left on a desk can be reported
-as occupied. The system depends on library Wi-Fi and the cloud service, and larger deployments
-need more nodes, pin and power planning and sensor calibration.
+An IR sensor detects any object, not only a person, so a bag left on a desk shows the seat
+as taken. The system needs library Wi-Fi and the cloud service, and larger set-ups need more
+nodes, careful wiring and power planning, and sensor tuning.
 
 % ===== CHAPTER 4: CONCLUSION =====
 
@@ -957,21 +922,20 @@ need more nodes, pin and power planning and sensor calibration.
 
 \section{Summary of Work}
 
-This project delivers a working architecture for a real-time, seat-level library occupancy
-system built from low-cost IoT hardware and a reactive cloud stack. It addresses the three
-identified problems: it reduces manual searching by showing free seats remotely, replaces
-aggregate gate counts with micro-level desk availability, and gives administrators live and
-historical analytics.
+This project builds SmartLib, a real-time Library Seat Allocator, from low-cost IoT hardware and a cloud
+database. It solves the three problems found earlier: users can see free seats before
+walking in, each desk's status is shown instead of a total count, and staff get live and past
+usage data.
 
 \section{Future Work and Recommendations}
 
 \begin{enumerate}
-  \item Combine IR with a second sensing modality to distinguish a person from an object.
-  \item Add seat reservation and time-limited holds.
-  \item Forecast occupancy from the stored history to predict peak hours.
-  \item Adopt a lightweight messaging protocol such as MQTT and battery or low-power operation.
-  \item Extend to multi-zone and multi-floor deployment with a campus-wide map.
-  \item Send push notifications when a preferred seat or zone becomes free.
+  \item Add a second type of sensor to tell a person apart from an object.
+  \item Add seat booking with time-limited holds.
+  \item Use past data to predict busy hours.
+  \item Use a lighter messaging method such as MQTT, and battery or low-power operation.
+  \item Cover more zones and floors with a campus-wide map.
+  \item Send alerts when a chosen seat or zone becomes free.
 \end{enumerate}
 
 % ===== BIBLIOGRAPHY =====
