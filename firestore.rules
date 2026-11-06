@@ -1,0 +1,24 @@
+rules_version = '2';
+
+// Browsers may only READ. Every write goes through the /api routes (Firebase Admin SDK),
+// which bypass these rules, so no client can change seats, holds, reservations or settings.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public, anonymous live data for the student site and kiosk.
+    match /sensors/{id}  { allow read: if true; allow write: if false; }
+    match /holds/{id}    { allow read: if true; allow write: if false; }
+    match /sessions/{id} { allow read: if true; allow write: if false; }
+    match /config/{id}   { allow read: if true; allow write: if false; }
+
+    // Private: reservations name the student, so only admins may read them.
+    match /reservations/{id} {
+      allow read: if request.auth != null
+                  && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+      allow write: if false;
+    }
+
+    // Never readable from a browser.
+    match /students/{id} { allow read, write: if false; }
+    match /admins/{id}   { allow read, write: if false; }
+  }
+}

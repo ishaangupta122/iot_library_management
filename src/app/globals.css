@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand red */
+  --color-brand-50: #fbf1f0;
+  --color-brand-100: #f6e0de;
+  --color-brand-200: #eec1be;
+  --color-brand-300: #e29a96;
+  --color-brand-400: #d26b66;
+  --color-brand-500: #c9514b;
+  --color-brand-600: #bb3c37;
+  --color-brand-700: #9c302b;
+  --color-brand-800: #7f2926;
+  --color-brand-900: #682523;
+
+  /* Warm cream surfaces */
+  --color-cream-50: #f1f1ed;
+  --color-cream-100: #e8e7e3;
+  --color-cream-200: #dedcd7;
+  --color-cream-300: #d2d1cb;
+
+  --color-surface: #f8f8f5;
+
+  /* Text + lines */
+  --color-ink: #1f1b18;
+  --color-ink-soft: #4a443e;
+  --color-muted: #5f5a53;
+  --color-line: #d6d5cf;
+  --color-line-strong: #c3c2ba;
+
+  /* Semantic */
+  --color-ok-50: #eaf6ee;
+  --color-ok-100: #d3ecdb;
+  --color-ok-500: #2f9e5f;
+  --color-ok-700: #1b6b40;
+  --color-warn-50: #fff5dc;
+  --color-warn-100: #ffe8ae;
+  --color-warn-500: #d98b0b;
+  --color-warn-700: #8a5100;
+
+  --shadow-card: 0 1px 2px rgb(31 27 24 / 0.04), 0 1px 3px rgb(31 27 24 / 0.05);
+  --shadow-pop: 0 10px 30px -6px rgb(31 27 24 / 0.18), 0 2px 6px rgb(31 27 24 / 0.06);
+}
+
+html {
+  background: var(--color-cream-100);
+}
+
+body {
+  background-color: var(--color-cream-100);
+  background-image:
+    linear-gradient(rgb(31 27 24 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(31 27 24 / 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Outfit's tabular "1" has a slab foot; use proportional digits for headings unless tabular-nums is asked for */
+@layer base {
+  .font-display {
+    font-variant-numeric: normal;
+  }
+}
+
+/* Tighter corners shared by the student site and the admin dashboard */
+.tight-corners {
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
+}
+
+/* Tailwind v4 resets buttons to the default cursor; restore a pointer on anything clickable */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="switch"],
+  [role="radio"],
+  summary,
+  select:not(:disabled),
+  label[for],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+}
+
+/* Custom select arrow so it sits comfortably inside the field on every browser */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f5a53' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Seat cards: no focus outline after being clicked or after their dialog closes */
+.seat-card:focus,
+.seat-card:focus-visible {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+/* Recharts: keep chart text legible and on-brand */
+/* The dialog panel is focused programmatically; it should not show a ring */
+[role="dialog"]:focus-visible {
+  outline: none;
+}
+
+.on-red :focus-visible {
+  outline-color: #fff;
+}
+.on-red .reset-focus :focus-visible {
+  outline-color: var(--color-brand-600);
+}
+
+.recharts-text {
+  font-family: var(--font-sans);
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    background-image: none !important;
+  }
+}
+
+@keyframes shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
