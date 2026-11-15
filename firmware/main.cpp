@@ -3,24 +3,7 @@
 #include <addons/TokenHelper.h>
 #include <addons/RTDBHelper.h>
 
-// ======================================
-// WIFI CONFIGURATION
-// ======================================
-
-#define WIFI_SSID      "ERROR"
-#define WIFI_PASSWORD  "skansal937"
-
-// ======================================
-// FIREBASE CONFIGURATION
-// ======================================
-
-#define API_KEY "AIzaSyBpIxKwyqfCLBxN94INIQ-QHGiCkz9UzMA"
-
-#define DATABASE_URL "https://smartlib-tiet-default-rtdb.asia-southeast1.firebasedatabase.app/"
-
-#define USER_EMAIL "ishaanbhaiya@idk.com"
-
-#define USER_PASSWORD "ishaanbhaiya@"
+#include "secrets.h"
 
 // ======================================
 // SENSOR CONFIGURATION

@@ -18,7 +18,7 @@ export const CONFIG = {
 
   // History windows
   history: {
-    loadDays: 90, // sessions loaded
+    loadDays: 30, // sessions loaded
     studentTrendDays: 30, // student trends
     notificationDays: 7, // admin notifications
   },

@@ -16,7 +16,6 @@ const PERIODS = [
   { value: "today", label: "Today", days: 1, group: "hourly" },
   { value: "7d", label: "7 days", days: 7, group: "daily" },
   { value: "30d", label: "30 days", days: 30, group: "daily" },
-  { value: "90d", label: "90 days", days: 90, group: "weekly" },
 ];
 
 export default function AnalyticsPage() {

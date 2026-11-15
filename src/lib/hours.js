@@ -1,4 +1,4 @@
-import { addDays, dateKeyOf, dayStartMs, MIN, WEEKDAY_LONG, weekdayOf } from "@/lib/utils";
+import { addDays, dateKeyOf, dayStartMs, MIN, WEEKDAY_LONG, weekdayOf } from "./utils.js";
 
 export const ALL_DAY = { open: "00:00", close: "24:00" };
 export const DEFAULT_DAY = { open: "08:00", close: "22:00" };

@@ -21,6 +21,7 @@ export function useLiveFeed(enabled, isAdmin) {
     const db = getDb();
     const rtdb = getRtdb();
     const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString();
+    const needsHistory = !window.location.pathname.startsWith("/kiosk");
     const fail = (e) => setError(e);
     const set = (key) => (value) => {
       setError(null);
@@ -32,14 +33,17 @@ export function useLiveFeed(enabled, isAdmin) {
         ? onValue(ref(rtdb, "sensors"), (snap) => set("sensors")(readSensors(snap.val())), fail)
         : (fail(new Error("NEXT_PUBLIC_FIREBASE_DATABASE_URL is not set.")), () => {}),
       listen(collection(db, "holds"), (snap) => set("holds")(docsOf(snap)), fail),
-      listen(query(collection(db, "sessions"), where("startedAt", ">=", since)), (snap) => set("sessions")(docsOf(snap)), fail),
+      needsHistory
+        ? listen(query(collection(db, "sessions"), where("startedAt", ">=", since)), (snap) => set("sessions")(docsOf(snap)), fail)
+        : (set("sessions")([]), () => {}),
     ];
     return () => stops.forEach((stop) => stop());
   }, [enabled]);
 
   useEffect(() => {
     if (!enabled || !isAdmin) return undefined;
-    return listen(collection(getDb(), "reservations"), (snap) => setReservations(docsOf(snap)), (e) => setError(e));
+    const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString();
+    return listen(query(collection(getDb(), "reservations"), where("createdAt", ">=", since)), (snap) => setReservations(docsOf(snap)), (e) => setError(e));
   }, [enabled, isAdmin]);
 
   const ready = enabled && Object.values(state).every((v) => v !== null) && (!isAdmin || reservations !== null);

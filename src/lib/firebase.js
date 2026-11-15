@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
 const config = {
@@ -32,7 +32,15 @@ export function getRtdb() {
   return getDatabase(firebaseApp(), databaseURL);
 }
 
+let db = null;
 export function getDb() {
   if (!isFirebaseConfigured) return null;
-  return getFirestore(firebaseApp());
+  if (db) return db;
+  const app = firebaseApp();
+  try {
+    db = typeof window === "undefined" ? getFirestore(app) : initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch {
+    db = getFirestore(app);
+  }
+  return db;
 }

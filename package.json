@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "recorder": "node --env-file=.env.local scripts/recorder.mjs",
-    "seed": "node --env-file=.env.local scripts/seed.mjs"
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "sample": "node --env-file=.env.local scripts/sample.mjs",
+    "sample:remove": "node --env-file=.env.local scripts/sample.mjs --remove"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
