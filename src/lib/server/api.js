@@ -38,15 +38,35 @@ const adminEmails = () =>
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
 
+async function verifyToken(token) {
+  try {
+    return await (await adminAuth()).verifyIdToken(token);
+  } catch (error) {
+    console.error("verifyIdToken failed, checking with Google instead:", error?.code ?? error?.message);
+  }
+  try {
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ idToken: token }),
+    });
+    if (!res.ok) {
+      console.error("Token rejected by Google:", res.status, await res.text());
+      return null;
+    }
+    const claims = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+    return claims.aud === process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? claims : null;
+  } catch (error) {
+    console.error("Token check failed:", error?.message);
+    return null;
+  }
+}
+
 export async function requireAdmin(request) {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) throw new ApiError(401, "Please sign in again.");
-  let decoded;
-  try {
-    decoded = await (await adminAuth()).verifyIdToken(token);
-  } catch {
-    throw new ApiError(401, "Please sign in again.");
-  }
+  const decoded = await verifyToken(token);
+  if (!decoded) throw new ApiError(401, "Please sign in again.");
   if (!adminEmails().includes((decoded.email ?? "").toLowerCase())) throw new ApiError(403, "This account does not have admin access.");
   if (Date.now() / 1000 - decoded.auth_time > CONFIG.admin.sessionDays * 86_400) throw new ApiError(401, "Your session has expired. Please sign in again.");
   return decoded;
