@@ -43,7 +43,7 @@ export async function requireAdmin(request) {
   if (!token) throw new ApiError(401, "Please sign in again.");
   let decoded;
   try {
-    decoded = await adminAuth().verifyIdToken(token);
+    decoded = await (await adminAuth()).verifyIdToken(token);
   } catch {
     throw new ApiError(401, "Please sign in again.");
   }

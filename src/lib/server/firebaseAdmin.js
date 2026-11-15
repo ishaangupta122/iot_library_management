@@ -1,6 +1,5 @@
 import "server-only";
 import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getDatabase } from "firebase-admin/database";
 
@@ -16,4 +15,7 @@ const app = () => (getApps().length ? getApp() : initializeApp({ credential: cre
 
 export const adminDb = () => getFirestore(app());
 export const adminRtdb = () => getDatabase(app());
-export const adminAuth = () => getAuth(app());
+export const adminAuth = async () => {
+  const { getAuth } = await import("firebase-admin/auth");
+  return getAuth(app());
+};

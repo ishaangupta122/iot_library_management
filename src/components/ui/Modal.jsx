@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 
 export function Modal({ open, onClose, title, description, badge, children, footer, size = "md", placement = "center" }) {
   const panelRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
     const previouslyFocused = document.activeElement;
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => e.key === "Escape" && onCloseRef.current();
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     panelRef.current?.focus();
@@ -19,7 +21,7 @@ export function Modal({ open, onClose, title, description, badge, children, foot
       document.body.style.overflow = "";
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
