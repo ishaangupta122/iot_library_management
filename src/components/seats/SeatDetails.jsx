@@ -1,21 +1,22 @@
 "use client";
 
-import { Armchair, Ban, CheckCircle2, Clock, Info } from "lucide-react";
+import { Armchair, Ban, CheckCircle2, Clock, DoorClosed, Info } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { STATUS_META } from "@/components/ui/StatusBadge";
 import { useLibrary } from "@/context/LibraryContext";
 import { cn, formatTime } from "@/lib/utils";
 
-const ICONS = { available: CheckCircle2, occupied: Armchair, reserved: Clock, unavailable: Ban };
+const ICONS = { available: CheckCircle2, occupied: Armchair, reserved: Clock, unavailable: Ban, closed: DoorClosed };
 const THEME = {
   available: { panel: "border-ok-500/30 bg-gradient-to-br from-ok-50 to-surface", pill: "bg-ok-700 text-white", text: "Empty and free to sit." },
   occupied: { panel: "border-brand-500/30 bg-gradient-to-br from-brand-50 to-surface", pill: "bg-brand-700 text-white", text: "Someone is sitting here." },
   reserved: { panel: "border-warn-500/30 bg-gradient-to-br from-warn-50 to-surface", pill: "bg-warn-700 text-white", text: "Empty, but held for someone arriving shortly." },
   unavailable: { panel: "border-line-strong bg-gradient-to-br from-cream-200 to-surface", pill: "bg-ink-soft text-white", text: "Status can't be confirmed right now." },
+  closed: { panel: "border-line-strong bg-gradient-to-br from-cream-200 to-surface", pill: "bg-ink-soft text-white", text: "The library is closed right now." },
 };
 const SENSOR = {
-  ok: { text: "Working", dot: "bg-ok-500" },
-  offline: { text: "Not reporting", dot: "bg-brand-600" },
+  ok: { text: "Reporting", dot: "bg-ok-500" },
+  offline: { text: "No data", dot: "bg-brand-600" },
   none: { text: "No sensor", dot: "bg-muted/60" },
 };
 
@@ -29,8 +30,9 @@ function Row({ label, children }) {
 }
 
 export function SeatDetails({ seatId, onClose, admin = false }) {
-  const { seatById, nowMs } = useLibrary();
-  const seat = seatId ? seatById.get(seatId) : null;
+  const { seatById, publicSeatViews, nowMs } = useLibrary();
+  // Students see the same seat state as the public layout (e.g. Closed), never raw sensor details.
+  const seat = !seatId ? null : admin ? seatById.get(seatId) : publicSeatViews.find((s) => s.id === seatId) ?? null;
   if (!seat) return null;
 
   const theme = THEME[seat.status];
@@ -50,7 +52,7 @@ export function SeatDetails({ seatId, onClose, admin = false }) {
       <p className="text-lg leading-snug font-semibold text-ink">{theme.text}</p>
 
       <dl className="mt-4 divide-y divide-line">
-        <Row label="Sensor"><span className="inline-flex items-center gap-2"><span className={cn("h-2.5 w-2.5 rounded-full", sensor.dot)} aria-hidden="true" />{admin && seat.device ? `${seat.device.id} · ${sensor.text}` : sensor.text}</span></Row>
+        {admin && <Row label="Sensor"><span className="inline-flex items-center gap-2"><span className={cn("h-2.5 w-2.5 rounded-full", sensor.dot)} aria-hidden="true" />{seat.device ? `${seat.device.id} · ${sensor.text}` : sensor.text}</span></Row>}
         {admin && seat.reservation && <Row label="Held by">{seat.reservation.studentName}</Row>}
         {seat.reservation && (
           <Row label="Held until">

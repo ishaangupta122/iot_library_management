@@ -5,6 +5,7 @@ const COLORS = {
   occupied: { back: "bg-brand-700", seat: "bg-brand-700/65", leg: "bg-brand-700" },
   reserved: { back: "bg-warn-700", seat: "bg-warn-700/65", leg: "bg-warn-700" },
   unavailable: { back: "bg-ink-soft/80", seat: "bg-ink-soft/45", leg: "bg-ink-soft/80" },
+  closed: { back: "bg-ink-soft/50", seat: "bg-ink-soft/30", leg: "bg-ink-soft/50" },
 };
 
 const SIZES = {

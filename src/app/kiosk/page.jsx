@@ -14,8 +14,9 @@ import { SeatLegend } from "@/components/seats/SeatLegend";
 const MODAL_IDLE_MS = 45_000;
 
 export default function KioskApp() {
-  const { library, publicSeatViews: seatViews, floors, publicSeatCounts: seatCounts, setClockRunning, feedStatus, retryFeed } = useLibrary();
+  const { library, publicSeatViews: seatViews, floors, publicSeatCounts: seatCounts, setClockRunning, feedStatus, retryFeed, libraryOpen, libraryHoursText } = useLibrary();
   const ready = feedStatus === "ready";
+  const closed = ready && !libraryOpen;
   const [selectedId, setSelectedId] = useState(null);
   const [done, setDone] = useState(null);
   const hold = formatDuration(CONFIG.reservation.holdMinutes);
@@ -31,8 +32,8 @@ export default function KioskApp() {
     return () => clearTimeout(timer);
   }, [done]);
   useEffect(() => {
-    if (!ready) setSelectedId(null);
-  }, [ready]);
+    if (!ready || closed) setSelectedId(null);
+  }, [ready, closed]);
   useEffect(() => {
     if (!selectedId) return undefined;
     const timer = setTimeout(() => setSelectedId(null), MODAL_IDLE_MS);
@@ -51,13 +52,14 @@ export default function KioskApp() {
                 <h1 className="font-display text-4xl font-medium">Choose a seat</h1>
                 <p className="mt-1.5 text-lg text-muted">Tap a free seat to reserve it for {hold}.</p>
               </div>
-              {ready && <p className="font-display text-2xl font-medium"><span className="text-ok-700">{seatCounts.available}</span> <span className="text-lg font-normal text-muted">of {seatCounts.total} free</span></p>}
+              {ready && !closed && <p className="font-display text-2xl font-medium"><span className="text-ok-700">{seatCounts.available}</span> <span className="text-lg font-normal text-muted">of {seatCounts.total} free</span></p>}
             </div>
 
             {feedStatus === "loading" && <KioskSkeleton />}
             {(feedStatus === "offline" || feedStatus === "error") && <KioskMessage kind={feedStatus} onRetry={retryFeed} />}
-            {ready && seatCounts.available === 0 && <div className="mb-6"><KioskMessage kind="full" /></div>}
-            {ready && <div className="min-h-0 space-y-6 overflow-y-auto">
+            {closed && <KioskMessage kind="closed" text={libraryHoursText.replace(/^Closed · o/, "O")} />}
+            {ready && !closed && seatCounts.available === 0 && <div className="mb-6"><KioskMessage kind="full" /></div>}
+            {ready && !closed && <div className="min-h-0 space-y-6 overflow-y-auto">
               {floors.map((floor) => {
                 const seats = seatViews.filter((s) => s.floorId === floor.id);
                 if (!seats.length) return null;

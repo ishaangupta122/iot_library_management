@@ -3,6 +3,7 @@ export const SEAT_STATUS = {
   RESERVED: "reserved",
   OCCUPIED: "occupied",
   UNAVAILABLE: "unavailable",
+  CLOSED: "closed",
 };
 
 export const RESERVATION_STATUS = {
@@ -25,8 +26,8 @@ function findActiveReservation(reservations, seatId, now) {
 
 function getSensorState(device, reading) {
   if (!device) return { state: "none", label: "No sensor" };
-  if (!device.isActive || !reading) return { state: "offline", label: "Sensor not reporting" };
-  return { state: "ok", label: "Working" };
+  if (!device.isActive || !reading) return { state: "offline", label: "No data from sensor" };
+  return { state: "ok", label: "Reporting" };
 }
 
 export function deriveSeatStatus({ seat, device, reading, reservations, now }) {
@@ -46,7 +47,7 @@ export function deriveSeatStatus({ seat, device, reading, reservations, now }) {
 
 export function countByStatus(allSeats) {
   const seatViews = allSeats.filter((s) => !s.maintenance);
-  const counts = { available: 0, reserved: 0, occupied: 0, unavailable: 0 };
+  const counts = { available: 0, reserved: 0, occupied: 0, unavailable: 0, closed: 0 };
   for (const seat of seatViews) counts[seat.status] += 1;
   const total = seatViews.length;
   const reporting = total - counts.unavailable;

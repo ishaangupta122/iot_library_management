@@ -1,5 +1,7 @@
 import { ApiError, json, readBody, route, withTimeout } from "@/lib/server/api";
-import { normalizeRoll } from "@/lib/utils";
+import { dateKeyOf, MIN, normalizeRoll } from "@/lib/utils";
+import { libraryStatus, openWindow } from "@/lib/hours";
+import { operatingHours as defaultHours } from "@/mockData";
 import { CONFIG } from "@/config";
 import { adminDb, adminRtdb } from "@/lib/server/firebaseAdmin";
 import { parseSensorValue, sensorForSeat, SENSOR_VALUE } from "@/lib/sensorMap";
@@ -19,6 +21,13 @@ export const POST = route(async (request) => {
   const db = adminDb();
   const nowMs = Date.now();
   const now = new Date(nowMs).toISOString();
+
+  const saved = (await withTimeout(db.doc("config/settings").get())).data()?.operatingHours;
+  const hours = Array.isArray(saved) && saved.length === 7 ? saved : defaultHours;
+  const status = libraryStatus(hours, nowMs);
+  if (!status.open) throw new ApiError(409, `The library is closed. ${status.text.replace(/^Closed · o/, "O")}.`);
+  const today = openWindow(hours, dateKeyOf(nowMs));
+  if (today && today.closeMs - nowMs < CONFIG.reservation.holdMinutes * MIN) throw new ApiError(409, "The library is about to close, so reservations are paused.");
 
   const reservation = await withTimeout(db.runTransaction(async (tx) => {
     const [student, hold, mine] = await Promise.all([

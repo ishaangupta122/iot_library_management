@@ -8,12 +8,14 @@ const CARD = {
   occupied: "border-brand-700/50 bg-brand-700/[0.05] hover:border-brand-700",
   reserved: "border-warn-700/50 bg-warn-700/[0.05] hover:border-warn-700",
   unavailable: "border-dashed border-ink-soft/45 bg-ink-soft/[0.04] hover:border-ink-soft/70",
+  closed: "border-ink-soft/25 bg-ink-soft/[0.04] hover:border-ink-soft/50",
 };
 const TEXT = {
   available: "text-ok-700",
   occupied: "text-brand-700",
   reserved: "text-warn-700",
   unavailable: "text-ink-soft",
+  closed: "text-ink-soft/80",
 };
 
 export function SeatTile({ seat, selected, onSelect, large = false, disabled = false }) {

@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { findNavItem } from "@/lib/navigation";
 import { GlobalSearch } from "@/app/admin/_components/GlobalSearch";
 import { NotificationsMenu } from "@/app/admin/_components/HeaderMenus";
+import { LibraryClock } from "@/app/admin/_components/LibraryClock";
 import { useLibrary } from "@/context/LibraryContext";
 
 export function Header({ onOpenMenu }) {
@@ -28,8 +29,9 @@ export function Header({ onOpenMenu }) {
           <span className={`h-2 w-2 rounded-full ${TAG[1]}`} aria-hidden="true" />{TAG[0]}
         </span>
       )}
-      <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-3 sm:flex-none">
-        <div className="min-w-0 flex-1 sm:w-[26rem] sm:flex-none lg:w-[34rem]"><GlobalSearch /></div>
+      <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-3">
+        {feedStatus === "ready" && <LibraryClock />}
+        <div className="min-w-0 flex-1 sm:max-w-[22rem] xl:max-w-[30rem]"><GlobalSearch /></div>
         <NotificationsMenu />
       </div>
     </header>

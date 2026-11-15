@@ -1,4 +1,4 @@
-import { AlertCircle, Armchair, Ban, CheckCircle2, Clock, Hourglass, MinusCircle, Wifi, WifiOff, XCircle } from "lucide-react";
+import { AlertCircle, Armchair, Ban, CheckCircle2, Clock, DoorClosed, Hourglass, MinusCircle, Wifi, WifiOff, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TONES = {
@@ -14,6 +14,7 @@ export const STATUS_META = {
   occupied: { label: "Occupied", tone: "danger", icon: Armchair },
   reserved: { label: "Reserved", tone: "warn", icon: Clock },
   unavailable: { label: "Unavailable", tone: "neutral", icon: Ban },
+  closed: { label: "Closed", tone: "neutral", icon: DoorClosed },
   active: { label: "Active", tone: "warn", icon: Hourglass },
   completed: { label: "Completed", tone: "ok", icon: CheckCircle2 },
   expired: { label: "Expired", tone: "danger", icon: MinusCircle },

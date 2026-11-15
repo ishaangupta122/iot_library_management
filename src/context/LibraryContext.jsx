@@ -8,6 +8,7 @@ import { countByStatus, deriveSeatStatus, getReservationStatus, RESERVATION_STAT
 import { useAuth } from "@/context/AuthContext";
 import { getFirebaseAuth, useLiveData } from "@/lib/firebase";
 import { SENSOR_VALUE, sensorForSeat } from "@/lib/sensorMap";
+import { libraryStatus } from "@/lib/hours";
 import { MIN, normalizeRoll } from "@/lib/utils";
 import { useLiveFeed } from "./useLiveFeed";
 import { Toasts } from "@/components/ui/Toasts";
@@ -92,10 +93,13 @@ export function LibraryProvider({ children }) {
     const reservationViews = reservations
       .map((r) => ({ ...r, status: getReservationStatus(r, now), seat: seatById.get(r.seatId) ?? null }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const publicSeatViews = seatViews.filter((s) => s.status !== SEAT_STATUS.UNAVAILABLE);
+    const hours = libraryStatus(data.operatingHours, nowMs);
+    const publicSeatViews = seatViews
+      .filter((s) => s.status !== SEAT_STATUS.UNAVAILABLE)
+      .map((s) => (hours.open ? s : { ...s, status: SEAT_STATUS.CLOSED, reason: "Library closed", reservation: null }));
     const monitoredSeats = seatViews.filter((s) => (useLiveData ? sensorForSeat(s.id) : s.deviceId) && s.enabled && !s.maintenance);
-    return { seatViews, seatById, reservationViews, seatCounts: countByStatus(seatViews), publicSeatViews, publicSeatCounts: countByStatus(publicSeatViews), monitoredSeats };
-  }, [floors, seats, devices, sensorReadings, reservations, now]);
+    return { seatViews, seatById, reservationViews, seatCounts: countByStatus(seatViews), publicSeatViews, publicSeatCounts: countByStatus(publicSeatViews), monitoredSeats, libraryOpen: hours.open, libraryHoursText: hours.text };
+  }, [floors, seats, devices, sensorReadings, reservations, now, nowMs, data.operatingHours]);
 
   const checkedIn = useRef(new Set());
   useEffect(() => {
@@ -123,6 +127,7 @@ export function LibraryProvider({ children }) {
           return fail("Can't reach the library system. Please try again.");
         }
       }
+      if (!derived.libraryOpen) return fail(`The library is closed. ${derived.libraryHoursText.replace(/^Closed · o/, "O")}.`);
       const seat = derived.seatById.get(seatId);
       const student = data.students.find((s) => normalizeRoll(s.id) === normalizeRoll(scanned));
       if (!student) return fail(`We don't recognise this card (${String(scanned).trim() || "nothing scanned"}). Please try again or ask the library desk.`);
@@ -138,7 +143,7 @@ export function LibraryProvider({ children }) {
       setMock((d) => ({ ...d, reservations: [...d.reservations, reservation] }));
       return ok({ reservation: { id: reservation.id, seatId, studentName: student.name, durationMinutes: holdMinutes, expiresAt: reservation.expiresAt } });
     },
-    [derived.seatById, data.students, reservations, now, nowMs],
+    [derived.seatById, derived.libraryOpen, derived.libraryHoursText, data.students, reservations, now, nowMs],
   );
 
   const updateOperatingHours = useCallback(async (hours) => {

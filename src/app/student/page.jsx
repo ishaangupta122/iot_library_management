@@ -11,7 +11,7 @@ import { useLibrary } from "@/context/LibraryContext";
 import { LibraryHoursCard } from "@/app/student/_components/LibraryHoursCard";
 
 export default function StudentDashboard() {
-  const { library, publicSeatCounts: c, feedStatus, retryFeed } = useLibrary();
+  const { library, publicSeatCounts: c, feedStatus, retryFeed, libraryOpen, libraryHoursText } = useLibrary();
   const ready = feedStatus === "ready";
 
   return (
@@ -32,6 +32,11 @@ export default function StudentDashboard() {
         )}
         {feedStatus === "error" && (
           <MessageCard icon={AlertTriangle} title="Something went wrong" text="We couldn't load seat availability. Please try again." action={<Button variant="primary" onClick={retryFeed}>Try again</Button>} />
+        )}
+        {ready && !libraryOpen && (
+          <p role="status" className="mb-4 rounded-xl border border-warn-100 bg-warn-50 px-4 py-3 text-sm font-medium text-warn-700">
+            {libraryHoursText}. Seats can be used and reserved when the library opens.
+          </p>
         )}
         {ready && (<>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

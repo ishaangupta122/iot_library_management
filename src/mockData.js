@@ -18,14 +18,13 @@ export const seats = [
   { id: "SEAT-001", number: "A", floorId: "FLR-1", deviceId: "S-01", enabled: true, maintenance: false },
   { id: "SEAT-002", number: "B", floorId: "FLR-1", deviceId: "S-02", enabled: true, maintenance: false },
   { id: "SEAT-003", number: "C", floorId: "FLR-1", deviceId: "S-03", enabled: true, maintenance: false },
-  { id: "SEAT-004", number: "D", floorId: "FLR-1", deviceId: "S-04", enabled: true, maintenance: true },
+  { id: "SEAT-004", number: "D", floorId: "FLR-1", deviceId: null, enabled: true, maintenance: true },
 ];
 
 export const devices = [
   { id: "S-01", seatId: "SEAT-001", isActive: true },
   { id: "S-02", seatId: "SEAT-002", isActive: true },
   { id: "S-03", seatId: "SEAT-003", isActive: true },
-  { id: "S-04", seatId: "SEAT-004", isActive: false },
 ];
 
 export const sensorReadings = {
