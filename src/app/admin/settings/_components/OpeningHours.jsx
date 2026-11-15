@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Form";
@@ -43,6 +43,15 @@ export function OpeningHours() {
   const { draft, setDraft, dirty, reset } = useDraft(operatingHours);
   const [errors, setErrors] = useState({});
   const [saveError, setSaveError] = useState("");
+  const previousTimes = useRef({});
+  const toggleAllDay = (h, on) => {
+    if (on) {
+      previousTimes.current[h.day] = { open: h.open, close: h.close };
+      setDay(h.day, ALL_DAY);
+    } else {
+      setDay(h.day, previousTimes.current[h.day] ?? DEFAULT_DAY);
+    }
+  };
 
   const setDay = (day, change) => {
     setErrors((e) => ({ ...e, [day]: undefined }));
@@ -79,7 +88,7 @@ export function OpeningHours() {
             <div key={day} className="flex flex-wrap items-center gap-x-5 gap-y-2 py-3 first:pt-0">
               <span className="w-24 text-sm font-semibold text-ink">{h.label}</span>
               <Check checked={h.closed} onChange={(v) => setDay(day, { closed: v })}>Closed</Check>
-              <Check checked={allDay} disabled={h.closed} onChange={(v) => setDay(day, v ? ALL_DAY : DEFAULT_DAY)}>24 hours</Check>
+              <Check checked={allDay} disabled={h.closed} onChange={(v) => toggleAllDay(h, v)}>24 hours</Check>
               {h.closed ? (
                 <span className="text-sm text-muted">Closed all day</span>
               ) : allDay ? (
