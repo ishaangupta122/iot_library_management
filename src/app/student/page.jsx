@@ -16,7 +16,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">{library.name}</h1>
           <p className="mt-1.5 text-sm text-muted sm:text-base">Check which seats are free before you head over.</p>

@@ -1,12 +1,12 @@
 "use client";
 
-import { Armchair, Ban, CheckCircle2, Clock, DoorClosed, Info } from "lucide-react";
+import { Armchair, Ban, CheckCircle2, Clock, Info } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { STATUS_META } from "@/components/ui/StatusBadge";
 import { useLibrary } from "@/context/LibraryContext";
 import { cn, formatTime } from "@/lib/utils";
 
-const ICONS = { available: CheckCircle2, occupied: Armchair, reserved: Clock, unavailable: Ban, closed: DoorClosed };
+const ICONS = { available: CheckCircle2, occupied: Armchair, reserved: Clock, unavailable: Ban, closed: Ban };
 const THEME = {
   available: { panel: "border-ok-500/30 bg-gradient-to-br from-ok-50 to-surface", pill: "bg-ok-700 text-white", text: "Empty and free to sit." },
   occupied: { panel: "border-brand-500/30 bg-gradient-to-br from-brand-50 to-surface", pill: "bg-brand-700 text-white", text: "Someone is sitting here." },
@@ -31,7 +31,6 @@ function Row({ label, children }) {
 
 export function SeatDetails({ seatId, onClose, admin = false }) {
   const { seatById, publicSeatViews, nowMs } = useLibrary();
-  // Students see the same seat state as the public layout (e.g. Closed), never raw sensor details.
   const seat = !seatId ? null : admin ? seatById.get(seatId) : publicSeatViews.find((s) => s.id === seatId) ?? null;
   if (!seat) return null;
 

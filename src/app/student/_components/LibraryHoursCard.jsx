@@ -23,7 +23,7 @@ export function LibraryHoursCard() {
   const detail = rest.charAt(0).toUpperCase() + rest.slice(1);
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-end sm:gap-4">
+    <div className="flex flex-col gap-3 sm:items-end lg:flex-row-reverse lg:gap-4">
       <div className="sm:text-right">
         <p className="font-display text-3xl font-medium tracking-tight tabular-nums text-ink sm:text-4xl">{formatTime(ms)}</p>
         <p className="mt-0.5 text-sm text-muted">{WEEKDAY_SHORT[today]}, {formatDate(ms)}</p>
