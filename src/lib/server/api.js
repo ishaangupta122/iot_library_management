@@ -1,5 +1,6 @@
 import "server-only";
 import { NextResponse } from "next/server";
+import { CONFIG } from "@/config";
 import { adminAuth } from "./firebaseAdmin";
 
 export class ApiError extends Error {
@@ -47,5 +48,6 @@ export async function requireAdmin(request) {
     throw new ApiError(401, "Please sign in again.");
   }
   if (!adminEmails().includes((decoded.email ?? "").toLowerCase())) throw new ApiError(403, "This account does not have admin access.");
+  if (Date.now() / 1000 - decoded.auth_time > CONFIG.admin.sessionDays * 86_400) throw new ApiError(401, "Your session has expired. Please sign in again.");
   return decoded;
 }

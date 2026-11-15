@@ -1,4 +1,9 @@
 export const CONFIG = {
+  // Admin login
+  admin: {
+    sessionDays: 7, // days before sign-in is required again
+  },
+
   // Kiosk
   reservation: {
     holdMinutes: 5, // hold length

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -9,7 +9,9 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
 } from "firebase/auth";
+import { CONFIG } from "@/config";
 import { ADMIN_EMAILS, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
+import { DAY } from "@/lib/utils";
 
 const AuthContext = createContext(null);
 
@@ -35,6 +37,7 @@ const toUser = (u) => ({ email: u.email, name: u.displayName || u.email.split("@
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
+  const expiresAt = useRef(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -45,10 +48,29 @@ export function AuthProvider({ children }) {
       return undefined;
     }
     const auth = getFirebaseAuth();
-    return onAuthStateChanged(auth, (u) => {
-      setUser(u && isAdmin(u.email) ? toUser(u) : null);
+    const stop = onAuthStateChanged(auth, async (u) => {
+      if (!u || !isAdmin(u.email)) {
+        expiresAt.current = null;
+        setUser(null);
+        setReady(true);
+        return;
+      }
+      const { authTime } = await u.getIdTokenResult();
+      expiresAt.current = Date.parse(authTime) + CONFIG.admin.sessionDays * DAY;
+      if (Date.now() >= expiresAt.current) {
+        await firebaseSignOut(auth);
+        return;
+      }
+      setUser(toUser(u));
       setReady(true);
     });
+    const check = setInterval(() => {
+      if (expiresAt.current && Date.now() >= expiresAt.current) firebaseSignOut(auth);
+    }, 60_000);
+    return () => {
+      stop();
+      clearInterval(check);
+    };
   }, []);
 
   const admit = useCallback(async (credential) => {
