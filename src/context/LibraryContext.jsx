@@ -113,12 +113,13 @@ export function LibraryProvider({ children }) {
     async (seatId, scanned) => {
       if (useLiveData) {
         try {
-          const res = await fetch("/api/reserve", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seatId, roll: scanned }) });
+          const res = await fetch("/api/reserve", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seatId, roll: scanned }), signal: AbortSignal.timeout(20_000) });
           const body = await res.json().catch(() => ({}));
           if (res.ok) return ok({ reservation: body.reservation });
           console.error("Reservation failed", res.status, body);
           return fail(body.error ?? "The library system had a problem. Please try again or ask the library desk.");
-        } catch {
+        } catch (error) {
+          if (error?.name === "TimeoutError") return fail("The library system is taking too long to respond. Please try again or ask the library desk.");
           return fail("Can't reach the library system. Please try again.");
         }
       }

@@ -71,3 +71,12 @@ export async function requireAdmin(request) {
   if (Date.now() / 1000 - decoded.auth_time > CONFIG.admin.sessionDays * 86_400) throw new ApiError(401, "Your session has expired. Please sign in again.");
   return decoded;
 }
+
+/** Firebase retries for a long time when it is overloaded or over quota; give up after `ms` with a clear message. */
+export function withTimeout(promise, ms = 10_000) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new ApiError(503, "The library system is busy right now. Please try again in a few minutes or ask the library desk.")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}

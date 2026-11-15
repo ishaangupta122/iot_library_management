@@ -1,4 +1,4 @@
-import { ApiError, json, readBody, route } from "@/lib/server/api";
+import { ApiError, json, readBody, route, withTimeout } from "@/lib/server/api";
 import { normalizeRoll } from "@/lib/utils";
 import { CONFIG } from "@/config";
 import { adminDb, adminRtdb } from "@/lib/server/firebaseAdmin";
@@ -20,7 +20,7 @@ export const POST = route(async (request) => {
   const nowMs = Date.now();
   const now = new Date(nowMs).toISOString();
 
-  const reservation = await db.runTransaction(async (tx) => {
+  const reservation = await withTimeout(db.runTransaction(async (tx) => {
     const [student, hold, mine] = await Promise.all([
       tx.get(db.doc(`students/${roll}`)),
       tx.get(db.doc(`holds/${seatId}`)),
@@ -55,7 +55,7 @@ export const POST = route(async (request) => {
     tx.set(ref, record);
     tx.set(db.doc(`holds/${seatId}`), { id: ref.id, seatId, createdAt: now, expiresAt: record.expiresAt, durationMinutes, status: "active" });
     return record;
-  });
+  }));
 
   return json({ ok: true, id: reservation.id, reservation: { id: reservation.id, seatId, studentName: reservation.studentName, durationMinutes: reservation.durationMinutes, expiresAt: reservation.expiresAt } });
 });

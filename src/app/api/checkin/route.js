@@ -1,4 +1,4 @@
-import { ApiError, json, readBody, route } from "@/lib/server/api";
+import { ApiError, json, readBody, route, withTimeout } from "@/lib/server/api";
 import { adminDb, adminRtdb } from "@/lib/server/firebaseAdmin";
 import { parseSensorValue, sensorForSeat, SENSOR_VALUE } from "@/lib/sensorMap";
 
@@ -13,12 +13,12 @@ export const POST = route(async (request) => {
   const db = adminDb();
   const now = new Date().toISOString();
   const holdRef = db.doc(`holds/${seatId}`);
-  const checkedIn = await db.runTransaction(async (tx) => {
+  const checkedIn = await withTimeout(db.runTransaction(async (tx) => {
     const hold = await tx.get(holdRef);
     if (!hold.exists || hold.data().expiresAt <= now) return false;
     tx.update(db.doc(`reservations/${hold.data().id}`), { status: "completed", closedAt: now, closeReason: "checked-in" });
     tx.delete(holdRef);
     return true;
-  });
+  }));
   return json({ ok: true, checkedIn });
 });
