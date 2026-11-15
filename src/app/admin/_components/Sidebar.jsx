@@ -99,14 +99,14 @@ export function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollapse, onLo
           </button>
           </RailTip>
           <div className={cn("flex items-center gap-3 rounded-lg bg-white/10 p-2.5", rail && "lg:flex-col lg:bg-transparent lg:p-0")}>
-            <RailTip label={`${user?.name} · Administrator`} show={rail}>
+            <RailTip label={`${user?.name} · ${user?.email}`} show={rail}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-[13px] font-semibold text-brand-800">
                 {initialsOf(user?.name ?? "A")}
               </span>
             </RailTip>
             <div className={cn("min-w-0 flex-1", rail && "lg:hidden")}>
               <p className="truncate text-[13px] font-semibold text-white">{user?.name}</p>
-              <p className="truncate text-xs text-brand-200">Administrator</p>
+              <p className="truncate text-xs text-brand-200" title={user?.email}>{user?.email}</p>
             </div>
             <RailTip label="Log out" show={rail}>
               <button type="button" onClick={onLogout} aria-label="Log out" className="rounded-lg p-2 text-brand-100 hover:bg-white/15 hover:text-white">
