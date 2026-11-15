@@ -28,16 +28,17 @@ async function openSession(seat, atMs, approximate = false) {
   seat.session = { id: ref.id, seatId: seat.seatId, startedAt: iso(atMs), endedAt: null, breakStartedAt: null, breakMinutes: 0, breaks: 0, ...(approximate && { approximate: true }) };
   await ref.set(seat.session);
   log(`${seat.key} session opened ${ref.id}${approximate ? " (approximate start)" : ""}`);
+}
 
+async function checkIn(seat, atMs) {
   const holdRef = db.doc(`holds/${seat.seatId}`);
   const hold = await holdRef.get();
-  if (hold.exists && hold.data().expiresAt > iso(atMs)) {
-    await db.batch()
-      .update(db.doc(`reservations/${hold.data().id}`), { status: "completed", closedAt: iso(atMs), closeReason: "checked-in" })
-      .delete(holdRef)
-      .commit();
-    log(`${seat.key} kiosk reservation ${hold.data().id} checked in`);
-  }
+  if (!hold.exists || hold.data().expiresAt <= iso(atMs)) return;
+  await db.batch()
+    .update(db.doc(`reservations/${hold.data().id}`), { status: "completed", closedAt: iso(atMs), closeReason: "checked-in" })
+    .delete(holdRef)
+    .commit();
+  log(`${seat.key} kiosk reservation ${hold.data().id} checked in`);
 }
 
 async function closeSession(seat, endMs, approximate = false) {
@@ -65,6 +66,7 @@ async function onChange(seat, from, to, atMs) {
   log(`${seat.key} ${from} -> ${to}`);
 
   if (to === SENSOR_VALUE.OCCUPIED) {
+    await checkIn(seat, atMs);
     if (seat.pendingEnd !== null) {
       cancelPendingClose(seat);
     } else if (seat.session?.breakStartedAt) {
@@ -114,6 +116,7 @@ async function reconcile(seat, value, atMs) {
     log(`${seat.key} (${seat.seatId}) has no valid value in the database; skipped`);
     return;
   }
+  if (value === SENSOR_VALUE.OCCUPIED) await checkIn(seat, atMs);
   const inUse = value === SENSOR_VALUE.OCCUPIED || value === SENSOR_VALUE.BREAK;
   if (inUse && !seat.session) await openSession(seat, atMs, true);
   else if (!inUse && seat.session) await closeSession(seat, seat.session.breakStartedAt ? Date.parse(seat.session.breakStartedAt) : atMs, true);

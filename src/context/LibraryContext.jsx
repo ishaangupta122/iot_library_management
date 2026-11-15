@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CONFIG } from "@/config";
 import { MOCK_NOW } from "@/mockData";
 import { createInitialState } from "@/lib/demoData";
@@ -97,13 +97,27 @@ export function LibraryProvider({ children }) {
     return { seatViews, seatById, reservationViews, seatCounts: countByStatus(seatViews), publicSeatViews, publicSeatCounts: countByStatus(publicSeatViews), monitoredSeats };
   }, [floors, seats, devices, sensorReadings, reservations, now]);
 
+  const checkedIn = useRef(new Set());
+  useEffect(() => {
+    if (!useLiveData) return;
+    for (const seat of derived.seatViews) {
+      const held = seat.reservation;
+      if (seat.status !== SEAT_STATUS.OCCUPIED || !held || checkedIn.current.has(held.id)) continue;
+      checkedIn.current.add(held.id);
+      fetch("/api/checkin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seatId: seat.id }) })
+        .catch(() => checkedIn.current.delete(held.id));
+    }
+  }, [derived.seatViews]);
+
   const reserveWithCard = useCallback(
     async (seatId, scanned) => {
       if (useLiveData) {
         try {
           const res = await fetch("/api/reserve", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ seatId, roll: scanned }) });
-          const body = await res.json();
-          return res.ok ? ok({ reservation: body.reservation }) : fail(body.error ?? "We couldn't reserve this seat. Please try again.");
+          const body = await res.json().catch(() => ({}));
+          if (res.ok) return ok({ reservation: body.reservation });
+          console.error("Reservation failed", res.status, body);
+          return fail(body.error ?? "The library system had a problem. Please try again or ask the library desk.");
         } catch {
           return fail("Can't reach the library system. Please try again.");
         }

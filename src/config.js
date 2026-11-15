@@ -6,7 +6,7 @@ export const CONFIG = {
 
   // Kiosk
   reservation: {
-    holdMinutes: 5, // hold length
+    holdMinutes: 1, // hold length
     maxActivePerStudent: 1, // holds per student
   },
 

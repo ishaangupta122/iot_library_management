@@ -6,7 +6,7 @@ export const metadata = { title: "SmartLib" };
 
 const INTERFACES = [
   { href: "/student", audience: "For students", title: "Student Website", description: "See which seats are free right now and the best times to visit.", icon: GraduationCap },
-  { href: "/kiosk", audience: "For the library entrance", title: "Reservation Kiosk", description: `Tap a free seat and your ID card to hold it for ${CONFIG.reservation.holdMinutes} minutes.`, icon: MonitorSmartphone },
+  { href: "/kiosk", audience: "For the library entrance", title: "Reservation Kiosk", description: `Tap a free seat and your ID card to hold it for ${CONFIG.reservation.holdMinutes} minute${CONFIG.reservation.holdMinutes === 1 ? "" : "s"}.`, icon: MonitorSmartphone },
   { href: "/admin", audience: "For library staff", title: "Admin Dashboard", description: "Monitor seats and sensors, reservations and usage.", icon: LayoutDashboard },
 ];
 
