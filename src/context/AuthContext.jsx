@@ -32,7 +32,7 @@ const MESSAGES = {
 const friendly = (error) => MESSAGES[error?.code] ?? "Something went wrong. Please try again.";
 const isAdmin = (email) => ADMIN_EMAILS.includes((email ?? "").toLowerCase());
 
-const toUser = (u) => ({ email: u.email, name: u.displayName || u.email.split("@")[0] });
+const toUser = (u) => ({ email: u.email, name: u.displayName || u.email.split("@")[0], photo: u.photoURL || null });
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
