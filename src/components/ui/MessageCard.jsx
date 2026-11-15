@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/Card";
 
-/** Centered message for empty / offline / error states. */
 export function MessageCard({ icon: Icon, title, text, action }) {
   return (
     <Card className="flex flex-col items-center px-6 py-14 text-center">

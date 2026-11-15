@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 
-/** Small single-choice toggle group (tabs / granularity / presets). */
 export function Segmented({ value, onChange, options, label, className }) {
   return (
     <div role="group" aria-label={label} className={cn("inline-flex rounded-lg border border-line-strong bg-surface p-0.5", className)}>

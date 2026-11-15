@@ -1,22 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { SeatStatCard } from "@/components/seats/SeatStatCard";
-import { FilterBar } from "@/components/ui/FilterBar";
 import { FilterSelect, SearchInput } from "@/components/ui/SearchInput";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DataTable } from "@/components/ui/DataTable";
 import { useLibrary } from "@/context/LibraryContext";
 import { formatDateTime } from "@/lib/utils";
+import { usePersistentState } from "@/lib/usePersistentState";
 
 export default function ReservationsPage() {
   const { reservationViews } = useLibrary();
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [search, setSearch] = usePersistentState("reservations:search", "", (v) => typeof v === "string");
+  const [status, setStatus] = usePersistentState("reservations:status", "all", (v) => ["all", "active", "completed", "expired"].includes(v));
 
-  // Cancelled holds are not part of this view.
   const inRange = useMemo(() => reservationViews.filter((r) => r.status !== "cancelled"), [reservationViews]);
   const counts = useMemo(() => {
     const c = { active: 0, completed: 0, expired: 0 };
@@ -30,7 +29,7 @@ export default function ReservationsPage() {
 
   const columns = [
     { key: "id", header: "Reservation", sortable: true, render: (r) => <span className="font-semibold">{r.id}</span> },
-    { key: "seat", header: "Seat", sortable: true, sortValue: (r) => r.seat?.number, render: (r) => `${r.seat?.number ?? "—"}` },
+    { key: "seat", header: "Seat", sortable: true, sortValue: (r) => r.seat?.number, render: (r) => (r.seat ? `Seat ${r.seat.number}` : "—") },
     { key: "studentName", header: "Student", sortable: true, render: (r) => (<div><p>{r.studentName}</p><p className="text-xs text-muted">{r.studentId}</p></div>) },
     { key: "createdAt", header: "Created", sortable: true, render: (r) => formatDateTime(r.createdAt) },
     { key: "status", header: "Status", sortable: true, render: (r) => <StatusBadge status={r.status} /> },
@@ -47,10 +46,10 @@ export default function ReservationsPage() {
       </div>
 
       <Card className="mt-6">
-        <FilterBar>
+        <div className="flex flex-col gap-2 border-b border-line p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <SearchInput value={search} onChange={setSearch} placeholder="Search ID, seat or student" label="Search reservations" className="sm:min-w-56 sm:flex-1" />
           <FilterSelect label="Filter by status" value={status} onChange={setStatus} allLabel="All statuses" options={["active", "completed", "expired"].map((s) => ({ value: s, label: s[0].toUpperCase() + s.slice(1) }))} />
-        </FilterBar>
+        </div>
         <DataTable caption="Reservations" columns={columns} rows={rows} initialSort={{ key: "createdAt", dir: "desc" }} />
       </Card>
     </>

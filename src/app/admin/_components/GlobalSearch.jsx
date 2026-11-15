@@ -6,7 +6,6 @@ import { Armchair, CalendarClock, FileText, Search } from "lucide-react";
 import { useLibrary } from "@/context/LibraryContext";
 import { NAV_ITEMS } from "@/lib/navigation";
 
-/** Searches pages, seats, reservations and devices from the shared data. */
 export function GlobalSearch() {
   const router = useRouter();
   const { seatViews, reservationViews } = useLibrary();
@@ -20,8 +19,8 @@ export function GlobalSearch() {
     const match = (...fields) => fields.some((f) => f?.toLowerCase().includes(q));
     return [
       ...NAV_ITEMS.filter((n) => match(n.label, n.description)).map((n) => ({ key: n.href, label: n.label, meta: "Page", href: n.href, icon: FileText })),
-      ...seatViews.filter((s) => match(s.number, s.id, s.section?.name)).map((s) => ({ key: s.id, label: `Seat ${s.number}`, meta: `${s.floor?.name} · ${s.status}`, href: "/admin/monitoring", icon: Armchair })),
-      ...reservationViews.filter((r) => match(r.id, r.studentName, r.studentId)).slice(0, 4).map((r) => ({ key: r.id, label: r.id, meta: `${r.studentName} · seat ${r.seat?.number}`, href: "/admin/reservations", icon: CalendarClock })),
+      ...seatViews.filter((s) => match(s.number, s.id, s.floor?.name)).map((s) => ({ key: s.id, label: `Seat ${s.number}`, meta: `${s.floor?.name} · ${s.status}`, href: "/admin/monitoring", icon: Armchair })),
+      ...reservationViews.filter((r) => match(r.id, r.studentName, r.studentId)).slice(0, 4).map((r) => ({ key: r.id, label: r.id, meta: `${r.studentName} · Seat ${r.seat?.number}`, href: "/admin/reservations", icon: CalendarClock })),
     ].slice(0, 8);
   }, [query, seatViews, reservationViews]);
 

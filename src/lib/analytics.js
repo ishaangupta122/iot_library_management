@@ -1,13 +1,6 @@
-/**
- * Analytics derived from occupancy sessions and reservations.
- * Nothing here is stored; every number is computed from the shared data so
- * charts, reports and summaries always agree.
- *
- * `range` is { start, end } of inclusive "YYYY-MM-DD" library-local dates.
- */
-import { addDays, dateKeyOf, dayStartMs, daysBetween, formatDateKey, formatHourLabel, hourOfDay, WEEKDAY_SHORT, weekdayOf } from "@/lib/utils";
+import { HOUR, MIN, WEEKDAY_SHORT, addDays, dateKeyOf, dayStartMs, daysBetween, formatDateKey, formatHourLabel, hourOfDay, weekdayOf } from "@/lib/utils";
+import { openWindow, overlapMin } from "@/lib/hours";
 
-const MIN = 60_000;
 
 function rangeBounds(range) {
   return { startMs: dayStartMs(range.start), endMs: dayStartMs(addDays(range.end, 1)) };
@@ -17,23 +10,22 @@ function dateKeysInRange(range) {
   return Array.from({ length: daysBetween(range.start, range.end) + 1 }, (_, i) => addDays(range.start, i));
 }
 
-const toMin = (hhmm) => {
-  const [h, m] = hhmm.split(":").map(Number);
-  return h * 60 + m;
-};
-
-/** Minutes the library is open on `key`, optionally cut off at `nowMs` (so today is not penalized for hours yet to come). */
 const openMinutesOn = (operatingHours, key, nowMs = Infinity) => {
-  const h = operatingHours[weekdayOf(dayStartMs(key) + 12 * 3_600_000)];
-  if (!h || h.closed) return 0;
-  const openMs = dayStartMs(key) + toMin(h.open) * MIN;
-  const closeMs = Math.min(dayStartMs(key) + toMin(h.close) * MIN, nowMs);
-  return Math.max(0, (closeMs - openMs) / MIN);
+  const w = openWindow(operatingHours, key);
+  return w ? Math.max(0, (Math.min(w.closeMs, nowMs) - w.openMs) / MIN) : 0;
 };
 
-/** Session length in minutes; open sessions run until `nowMs`. */
+const sessionEnd = (s, nowMs) => Math.min(s.endedAt ? Date.parse(s.endedAt) : nowMs, nowMs);
+
 const sessionMinutes = (session, nowMs) =>
   Math.max(0, ((session.endedAt ? Date.parse(session.endedAt) : nowMs) - Date.parse(session.startedAt)) / MIN);
+
+export function historyRange(sessions, today, days) {
+  const first = sessions.reduce((min, s) => (s.startedAt < min ? s.startedAt : min), "9999");
+  const firstKey = first === "9999" ? today : dateKeyOf(Date.parse(first));
+  const start = addDays(today, -(days - 1));
+  return { start: firstKey > start ? (firstKey > today ? today : firstKey) : start, end: today };
+}
 
 export function sessionsInRange(sessions, range) {
   const { startMs, endMs } = rangeBounds(range);
@@ -43,7 +35,6 @@ export function sessionsInRange(sessions, range) {
   });
 }
 
-/** One row per day: occupied minutes vs. the capacity of all monitored seats while open. */
 export function dailyOccupancy({ sessions, monitoredSeats, operatingHours, range, nowMs }) {
   const rows = new Map(
     dateKeysInRange(range).map((key) => {
@@ -51,18 +42,22 @@ export function dailyOccupancy({ sessions, monitoredSeats, operatingHours, range
       return [key, { key, weekday, occupiedMin: 0, capacityMin: monitoredSeats * openMinutesOn(operatingHours, key, nowMs), sessions: 0 }];
     }),
   );
-  for (const s of sessionsInRange(sessions, range)) {
-    const row = rows.get(dateKeyOf(Date.parse(s.startedAt)));
-    if (!row) continue;
-    row.occupiedMin += sessionMinutes(s, nowMs);
-    row.sessions += 1;
+  for (const s of sessions) {
+    const start = Date.parse(s.startedAt);
+    const end = sessionEnd(s, nowMs);
+    const first = rows.get(dateKeyOf(start));
+    if (first) first.sessions += 1;
+    for (let key = dateKeyOf(start); key <= dateKeyOf(end); key = addDays(key, 1)) {
+      const row = rows.get(key);
+      const w = row && openWindow(operatingHours, key);
+      if (w) row.occupiedMin += overlapMin(start, end, w);
+    }
   }
-  return [...rows.values()].filter((r) => r.capacityMin > 0 || r.sessions > 0);
+  return [...rows.values()].filter((r) => r.capacityMin > 0);
 }
 
 const rate = (occupied, capacity) => (capacity > 0 ? Math.round((occupied / capacity) * 1000) / 10 : 0);
 
-/** Aggregate daily rows into day / week / month buckets. */
 export function bucketTrend(daily, granularity) {
   if (granularity === "daily") {
     return daily.map((d) => ({ key: d.key, label: formatDateKey(d.key), occupancy: rate(d.occupiedMin, d.capacityMin), sessions: d.sessions, occupiedHours: Math.round(d.occupiedMin / 6) / 10 }));
@@ -90,30 +85,26 @@ export function bucketTrend(daily, granularity) {
     .map((g) => ({ key: g.key, label: g.label, occupancy: rate(g.occupiedMin, g.capacityMin), sessions: g.sessions, occupiedHours: Math.round(g.occupiedMin / 6) / 10 }));
 }
 
-/** Average occupancy for each hour of the day across the range (library hours only). */
 export function hourlyProfile({ sessions, monitoredSeats, operatingHours, range, nowMs }) {
   const occupied = Array(24).fill(0);
   const capacity = Array(24).fill(0);
   for (const key of dateKeysInRange(range)) {
+    const w = openWindow(operatingHours, key);
+    if (!w) continue;
     const startMs = dayStartMs(key);
-    const h = operatingHours[weekdayOf(startMs + 12 * 3_600_000)];
-    if (!h || h.closed) continue;
-    const openHour = Number(h.open.split(":")[0]);
-    const closeHour = Number(h.close.split(":")[0]);
-    for (let hour = openHour; hour < closeHour; hour++) {
-      const hourStart = startMs + hour * 3_600_000;
-      const minutesElapsed = Math.min(60, Math.max(0, (nowMs - hourStart) / MIN));
-      capacity[hour] += monitoredSeats * minutesElapsed;
+    for (let hour = 0; hour < 24; hour++) {
+      const hourStart = startMs + hour * HOUR;
+      capacity[hour] += monitoredSeats * overlapMin(hourStart, Math.min(hourStart + HOUR, nowMs), w);
     }
   }
   for (const s of sessionsInRange(sessions, range)) {
-    const start = Date.parse(s.startedAt);
-    const end = s.endedAt ? Date.parse(s.endedAt) : nowMs;
-    for (let t = start; t < end; ) {
-      const hourEnd = (Math.floor((t + 330 * MIN) / 3_600_000) + 1) * 3_600_000 - 330 * MIN;
-      const slice = Math.min(end, hourEnd) - t;
-      occupied[hourOfDay(t)] += slice / MIN;
-      t += slice;
+    const end = sessionEnd(s, nowMs);
+    for (let t = Date.parse(s.startedAt); t < end; ) {
+      const hourEnd = (Math.floor((t + 330 * MIN) / HOUR) + 1) * HOUR - 330 * MIN;
+      const sliceEnd = Math.min(end, hourEnd);
+      const w = openWindow(operatingHours, dateKeyOf(t));
+      if (w) occupied[hourOfDay(t)] += overlapMin(t, sliceEnd, w);
+      t = sliceEnd;
     }
   }
   return occupied
@@ -121,7 +112,6 @@ export function hourlyProfile({ sessions, monitoredSeats, operatingHours, range,
     .filter((p) => p.active);
 }
 
-/** Occupancy per hour for a single date (used for "today vs typical"). */
 export function hourlyForDay({ sessions, monitoredSeats, dateKey, operatingHours, nowMs }) {
   return hourlyProfile({ sessions, monitoredSeats, operatingHours, range: { start: dateKey, end: dateKey }, nowMs });
 }
@@ -133,7 +123,6 @@ export function weekdayProfile(daily) {
     groups[d.weekday].capacityMin += d.capacityMin;
     groups[d.weekday].sessions += d.sessions;
   }
-  // Monday-first reads better for a library week.
   return [1, 2, 3, 4, 5, 6, 0].map((i) => ({
     label: WEEKDAY_SHORT[i],
     occupancy: rate(groups[i].occupiedMin, groups[i].capacityMin),
@@ -161,7 +150,6 @@ export function durationStats(sessions, nowMs) {
   };
 }
 
-/** Average length of a finished session for each weekday (Monday first), in minutes. */
 export function avgSessionByWeekday(sessions, nowMs) {
   const groups = Array.from({ length: 7 }, () => ({ minutes: 0, count: 0 }));
   for (const s of sessions) {

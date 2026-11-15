@@ -6,7 +6,6 @@ import { Sidebar } from "@/app/admin/_components/Sidebar";
 import { FeedGate } from "@/app/admin/_components/FeedGate";
 import { Header } from "@/app/admin/_components/Header";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { SimulationPanel } from "@/components/SimulationPanel";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +34,6 @@ export function AdminShell({ children }) {
           <FeedGate>{children}</FeedGate>
         </main>
       </div>
-      <SimulationPanel />
       <ConfirmDialog
         open={confirmLogout}
         onClose={() => setConfirmLogout(false)}

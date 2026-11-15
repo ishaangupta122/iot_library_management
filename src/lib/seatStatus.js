@@ -1,13 +1,3 @@
-/**
- * Seat-state business rules. Pure functions with no React or UI imports, so
- * they can be reused by the Student Website, the Kiosk, or Cloud Functions.
- *
- *   Occupied    sensor fresh and reports someone seated (reservation ignored)
- *   Reserved    sensor fresh, seat empty, active reservation exists
- *   Available   sensor fresh, seat empty, no active reservation
- *   Unavailable maintenance / disabled / no sensor / sensor offline or stale
- */
-
 export const SEAT_STATUS = {
   AVAILABLE: "available",
   RESERVED: "reserved",
@@ -22,75 +12,40 @@ export const RESERVATION_STATUS = {
   CANCELLED: "cancelled",
 };
 
-export const DEVICE_STATUS = {
-  ONLINE: "online",
-  OFFLINE: "offline",
-  INACTIVE: "inactive",
-};
-
 const toMs = (value) => (typeof value === "number" ? value : Date.parse(value));
 
-/** A stored "active" reservation past its expiry is treated as expired. */
-export function getReservationStatus(reservation, now, autoExpire = true) {
-  if (reservation.status === RESERVATION_STATUS.ACTIVE && autoExpire && toMs(reservation.expiresAt) <= toMs(now)) {
-    return RESERVATION_STATUS.EXPIRED;
-  }
+export function getReservationStatus(reservation, now) {
+  if (reservation.status === RESERVATION_STATUS.ACTIVE && toMs(reservation.expiresAt) <= toMs(now)) return RESERVATION_STATUS.EXPIRED;
   return reservation.status;
 }
 
-export function findActiveReservation(reservations, seatId, now, autoExpire = true) {
-  return (
-    reservations.find(
-      (r) => r.seatId === seatId && getReservationStatus(r, now, autoExpire) === RESERVATION_STATUS.ACTIVE,
-    ) ?? null
-  );
+function findActiveReservation(reservations, seatId, now) {
+  return reservations.find((r) => r.seatId === seatId && getReservationStatus(r, now) === RESERVATION_STATUS.ACTIVE) ?? null;
 }
 
-export function getDeviceStatus(device, now, timeoutMs) {
-  if (!device.isActive) return DEVICE_STATUS.INACTIVE;
-  if (!device.lastSeenAt || toMs(now) - toMs(device.lastSeenAt) > timeoutMs) return DEVICE_STATUS.OFFLINE;
-  return DEVICE_STATUS.ONLINE;
+function getSensorState(device, reading) {
+  if (!device) return { state: "none", label: "No sensor" };
+  if (!device.isActive || !reading) return { state: "offline", label: "Sensor not reporting" };
+  return { state: "ok", label: "Working" };
 }
 
-/**
- * How trustworthy is the sensor right now?
- * state: "fresh" | "stale" | "offline" | "inactive" | "none"
- */
-export function getSensorState(device, reading, now, timeoutMs) {
-  if (!device) return { state: "none", label: "No sensor assigned", ageSeconds: null };
-  const deviceStatus = getDeviceStatus(device, now, timeoutMs);
-  if (deviceStatus === DEVICE_STATUS.INACTIVE) return { state: "inactive", label: "Sensor inactive", ageSeconds: null };
-  if (deviceStatus === DEVICE_STATUS.OFFLINE) {
-    return { state: "offline", label: "Sensor offline", ageSeconds: Math.round((toMs(now) - toMs(device.lastSeenAt)) / 1000) };
-  }
-  if (!reading) return { state: "none", label: "No reading received", ageSeconds: null };
-  const ageSeconds = Math.round((toMs(now) - toMs(reading.updatedAt)) / 1000);
-  if (ageSeconds * 1000 > timeoutMs) return { state: "stale", label: "Sensor data stale", ageSeconds };
-  return { state: "fresh", label: "Sensor reporting", ageSeconds };
-}
-
-/**
- * Derive the display status of one seat.
- * Returns { status, reason, occupied, sensor, reservation }.
- * `occupied` is the raw physical reading (true/false) or null when unknown.
- */
-export function deriveSeatStatus({ seat, device, reading, reservations, now, timeoutMs, autoExpire = true }) {
-  const sensor = getSensorState(device, reading, now, timeoutMs);
-  const reservation = findActiveReservation(reservations, seat.id, now, autoExpire);
-  const sensorTrusted = sensor.state === "fresh";
-  const occupied = sensorTrusted ? Boolean(reading.occupied) : null;
+export function deriveSeatStatus({ seat, device, reading, reservations, now }) {
+  const sensor = getSensorState(device, reading);
+  const reservation = findActiveReservation(reservations, seat.id, now);
+  const occupied = sensor.state === "ok" ? Boolean(reading.occupied) : null;
   const result = (status, reason) => ({ status, reason, occupied, sensor, reservation });
 
   if (seat.maintenance) return result(SEAT_STATUS.UNAVAILABLE, "Under maintenance");
   if (!seat.enabled) return result(SEAT_STATUS.UNAVAILABLE, "Disabled by admin");
-  if (!device) return result(SEAT_STATUS.UNAVAILABLE, "No sensor assigned (unmonitored)");
-  if (!sensorTrusted) return result(SEAT_STATUS.UNAVAILABLE, `${sensor.label}: seat state unknown`);
+  if (sensor.state !== "ok") return result(SEAT_STATUS.UNAVAILABLE, sensor.label);
   if (occupied) return result(SEAT_STATUS.OCCUPIED, "Someone is seated");
-  if (reservation) return result(SEAT_STATUS.RESERVED, "Empty, held by an active reservation");
+  if (reading.onBreak) return result(SEAT_STATUS.RESERVED, "On a break, seat held");
+  if (reservation) return result(SEAT_STATUS.RESERVED, "Empty, held by a kiosk reservation");
   return result(SEAT_STATUS.AVAILABLE, "Empty and free to use");
 }
 
-export function countByStatus(seatViews) {
+export function countByStatus(allSeats) {
+  const seatViews = allSeats.filter((s) => !s.maintenance);
   const counts = { available: 0, reserved: 0, occupied: 0, unavailable: 0 };
   for (const seat of seatViews) counts[seat.status] += 1;
   const total = seatViews.length;
@@ -99,7 +54,6 @@ export function countByStatus(seatViews) {
     ...counts,
     total,
     reporting,
-    /** Share of seats with trusted sensor data that are physically occupied. */
     occupancyRate: reporting > 0 ? Math.round((counts.occupied / reporting) * 100) : 0,
   };
 }

@@ -2,7 +2,6 @@ import { Card } from "@/components/ui/Card";
 
 const Bar = ({ className }) => <div className={`animate-pulse rounded-md bg-cream-300 ${className}`} />;
 
-/** Placeholder shapes that match the real stat cards, seat layout and chart while data loads. */
 export function DashboardSkeleton() {
   return (
     <div role="status" aria-busy="true" aria-label="Loading seat availability" className="space-y-5">

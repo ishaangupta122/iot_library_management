@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-/** Sends visitors who are not signed in to the login page. */
 export function AdminGuard({ children }) {
   const { user, ready } = useAuth();
   const router = useRouter();

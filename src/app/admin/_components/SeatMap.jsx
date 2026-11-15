@@ -4,7 +4,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SeatTile } from "@/components/seats/SeatTile";
 import { useLibrary } from "@/context/LibraryContext";
 
-/** One card per floor with every seat on it. Works for any number of seats and floors. */
 export function SeatMap({ seats, selectedId, onSelect, bare = false }) {
   const { floors } = useLibrary();
 
@@ -17,7 +16,6 @@ export function SeatMap({ seats, selectedId, onSelect, bare = false }) {
     );
   }
 
-  // `bare` renders the floors without their own cards so they can sit inside another card.
   const Wrapper = bare ? "div" : "div";
   return (
     <Wrapper className={bare ? "" : "space-y-6"}>

@@ -13,7 +13,6 @@ const SIZES = {
   lg: { back: "h-11 w-20", seat: "h-8 w-[5.5rem]", legs: "w-16", leg: "h-3" },
 };
 
-/** Little chair illustration coloured by seat status (decorative). */
 export function Chair({ status, size = "md" }) {
   const c = COLORS[status];
   const s = SIZES[size];

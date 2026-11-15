@@ -1,0 +1,13 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "sensors": {
+      ".read": true,
+      ".write": "auth != null",
+      "$sensor": {
+        ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2"
+      }
+    }
+  }
+}

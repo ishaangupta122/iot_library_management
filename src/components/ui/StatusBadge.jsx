@@ -9,27 +9,21 @@ const TONES = {
   brand: "bg-brand-600 text-white border-brand-600",
 };
 
-/** One vocabulary for seat, reservation and device statuses (icon + text, never color alone). */
 export const STATUS_META = {
-  // seats
   available: { label: "Available", tone: "ok", icon: CheckCircle2 },
   occupied: { label: "Occupied", tone: "danger", icon: Armchair },
   reserved: { label: "Reserved", tone: "warn", icon: Clock },
   unavailable: { label: "Unavailable", tone: "neutral", icon: Ban },
-  // reservations
   active: { label: "Active", tone: "warn", icon: Hourglass },
   completed: { label: "Completed", tone: "ok", icon: CheckCircle2 },
   expired: { label: "Expired", tone: "danger", icon: MinusCircle },
   cancelled: { label: "Cancelled", tone: "danger", icon: XCircle },
-  // devices
   online: { label: "Online", tone: "ok", icon: Wifi },
   offline: { label: "Offline", tone: "danger", icon: WifiOff },
   inactive: { label: "Inactive", tone: "neutral", icon: Ban },
-  // sessions
   "in-progress": { label: "In progress", tone: "danger", icon: Armchair },
 };
 
-// Solid, dark fills with white text for status tags.
 const SOLID = {
   ok: "bg-ok-700 text-white",
   warn: "bg-warn-700 text-white",

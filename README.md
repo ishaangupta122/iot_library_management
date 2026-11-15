@@ -1,69 +1,66 @@
-# SmartLib: Smart Library Seat Management
+# SmartLib
 
-Next.js (App Router), JavaScript/JSX, Tailwind CSS, Lucide, Recharts. Static mock data for now; Firebase later.
+Smart library seat management. ESP32 IR sensors report each seat, and three web interfaces show live availability, kiosk reservations and usage analytics.
+
+Built with Next.js, Tailwind CSS, Recharts and Firebase.
+
+| Page | For |
+| --- | --- |
+| `/student` | Students: live seats, opening hours, best time to visit |
+| `/kiosk` | Library entrance: reserve a seat by scanning or typing a roll number |
+| `/admin` | Staff: overview, live monitoring, reservations, analytics, opening hours |
+
+## Setup
+
+1. **Install**
+   ```bash
+   npm install
+   ```
+2. **Environment**: copy `.env.local.example` to `.env.local` and fill in the values.
+   - `NEXT_PUBLIC_DATA_SOURCE=firestore` for live data, or leave it empty for demo mode.
+   - `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY`: Firebase console > Project settings > Service accounts > Generate new private key.
+3. **Firebase rules**
+   - Realtime Database: `sensors` must allow public read (see `firebase/database.rules.json`).
+   - Firestore: deploy `firebase/firestore.rules`:
+     ```bash
+     firebase login
+     firebase deploy --only firestore:rules
+     ```
+4. **Seed students and admins** (one time, or after editing the student list):
+   ```bash
+   npm run seed
+   ```
+
+## Run
 
 ```bash
-npm install
-npm run dev     # http://localhost:3000
+npm run dev        # terminal 1: website at http://localhost:3000
+npm run recorder   # terminal 2: records sensor changes for analytics, logs to the console
 ```
 
-Three interfaces share one data layer:
-
-| Route | Interface |
+| Command | What it does |
 | --- | --- |
-| `/admin` | Admin dashboard: Overview, Live Monitoring, Reservations, Usage Analytics, Settings |
-| `/student` | Public student dashboard (live seat availability, no login) |
-| `/kiosk` | Walk-up reservation kiosk (`/kiosk?dev` shows the developer tools) |
+| `npm run dev` | Start the website for development |
+| `npm run recorder` | Turn sensor changes into sessions (keep running while the library is open) |
+| `npm run seed` | Write the student list and admin emails to Firestore |
+| `npm run build` | Check that everything compiles (production build) |
+| `npm run start` | Run the production build |
 
-## Folder structure
+Without hardware, change `sensors/ir1` (0 free, 1 occupied, 2 on a break) by hand in the Firebase console.
 
-```
-src/
-├── app/
-│   ├── layout.jsx, page.jsx, globals.css, icon.svg     root layout, home launcher, styles, favicon
-│   ├── admin/
-│   │   ├── layout.jsx, page.jsx                         shell + Overview
-│   │   ├── monitoring/ reservations/ analytics/         one folder per page (page.jsx + its own parts)
-│   │   ├── settings/_components/                        settings sections
-│   │   └── _components/                                 sidebar, header, search, feed gate, overview cards
-│   ├── student/ (layout.jsx, page.jsx, _components/)
-│   └── kiosk/   (layout.jsx, page.jsx, _components/)
-├── components/
-│   ├── ui/        generic building blocks (Button, Card, Modal, DataTable, ...)
-│   ├── seats/     seat visuals shared by admin, student and kiosk (SeatTile, SeatDetails, Chair, SeatStatCard)
-│   ├── charts/    Recharts wrappers and chart colors
-│   └── SimulationPanel.jsx   dev-only simulator
-├── context/LibraryContext.jsx   in-memory data layer and actions (swap for Firebase later)
-├── data/mockData.js             single source of truth for all mock data
-└── lib/                         pure logic: seatStatus, analytics, utils, navigation, simulation
-```
+## Where things are
 
-Folders starting with `_` are private to their route and never become URLs.
+| What | File |
+| --- | --- |
+| Timings and limits (hold length, sessions, history) | `src/config.js` |
+| Seat layout, students, demo data | `src/mockData.js` |
+| Sensor to seat mapping (`ir1` to Seat A, ...) | `src/lib/sensorMap.js` |
+| Seat status rules | `src/lib/seatStatus.js` |
+| Opening hours | Admin > Settings (saved in Firebase) |
+| Firebase rules | `firebase/` |
 
-## Admin login (Firebase Authentication)
+## Notes
 
-`/admin/*` is guarded; signed-out visitors go to `/login`. Student and kiosk pages stay public.
-
-- Sign in with email + password or Google. "Forgot password?" sends Firebase's reset email (the link lets the admin choose a new password).
-- Only emails listed in `NEXT_PUBLIC_ADMIN_EMAILS` are admitted; anyone else is signed out immediately.
-- Without Firebase keys the app runs in **demo mode**: `admin@smartlib.demo` / `admin123` (no emails are sent).
-
-Setup: copy `.env.local.example` to `.env.local`, fill the Firebase web-app keys, then in the Firebase console enable **Authentication > Sign-in method > Email/Password and Google**, create the single admin user, and (for the email template) edit **Authentication > Templates > Password reset**. The email allowlist is a UI gate only; when the database is added, enforce admin-only writes in its security rules.
-
-## Live data (Firestore + /api routes)
-
-Off by default (the app uses built-in demo data). To switch on:
-
-1. Firebase console > Project settings > Service accounts > **Generate new private key**. Copy `client_email` and `private_key` into `.env.local` as `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` (keep the `\n` escapes, wrap in quotes). Never commit this key.
-2. Add `SENSOR_API_KEY` (long random string) to `.env.local`.
-3. Firestore > Rules: paste `firestore.rules` and Publish (or `firebase deploy --only firestore:rules`).
-4. Create the starting data: `node --env-file=.env.local scripts/seed.mjs` (set `SEED_STUDENTS="1024031118:Name,..."` for your students).
-5. Set `NEXT_PUBLIC_DATA_SOURCE=firestore` and restart.
-
-Browsers can only read. Writes go through `src/app/api/*` (Firebase Admin SDK): `sensor` (ESP32, header `x-device-key`), `reserve` (kiosk), `settings` (admin token).
-Test a sensor without hardware: `node --env-file=.env.local scripts/sensor.mjs DEV-1001 occupied`.
-
-## Key rules
-- `src/lib/seatStatus.js` holds the seat-state rules. Status is always derived from the sensor reading and reservations, never stored. Physical occupancy is separate from reservations.
-- One active hold per student at a time.
-- `NEXT_PUBLIC_ENABLE_SIMULATION=false` hides the dev simulator.
+- Without Firebase keys the app runs in demo mode. Admin login: `admin@smartlib.demo` / `admin123`.
+- Only emails in `NEXT_PUBLIC_ADMIN_EMAILS` can open `/admin`.
+- Never run a plain `firebase deploy`; it would overwrite the Realtime Database rules.

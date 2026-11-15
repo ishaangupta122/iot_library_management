@@ -6,11 +6,6 @@ import { Camera } from "lucide-react";
 const FORMATS = ["code_128", "code_39"];
 const CAMERA = { video: { facingMode: { ideal: "environment" } }, audio: false };
 
-/**
- * Live camera view that reads a Code 128 / Code 39 barcode and calls `onScan(text)` once.
- * Uses the browser's BarcodeDetector where it exists (Chrome on Android) and falls back to ZXing
- * (iPhone Safari). Browsers only allow the camera on https:// pages or localhost.
- */
 export function BarcodeScanner({ onScan }) {
   const videoRef = useRef(null);
   const onScanRef = useRef(onScan);
@@ -50,7 +45,6 @@ export function BarcodeScanner({ onScan }) {
               const codes = await detector.detect(video);
               if (codes[0]?.rawValue) return found(codes[0].rawValue);
             } catch {
-              /* frame not ready yet */
             }
             timer = setTimeout(tick, 150);
           };

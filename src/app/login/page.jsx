@@ -21,7 +21,7 @@ function GoogleMark() {
 export default function LoginPage() {
   const { user, ready, isDemo, signInWithEmail, signInWithGoogle, resetPassword } = useAuth();
   const router = useRouter();
-  const [mode, setMode] = useState("signin"); // "signin" | "reset" | "sent"
+  const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

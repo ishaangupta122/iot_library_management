@@ -5,15 +5,16 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SeatStatCard } from "@/components/seats/SeatStatCard";
 import { Card } from "@/components/ui/Card";
 import { FilterSelect, SearchInput } from "@/components/ui/SearchInput";
-import { SeatMap } from "@/app/admin/monitoring/SeatMap";
+import { SeatMap } from "@/app/admin/_components/SeatMap";
 import { SeatDetails } from "@/components/seats/SeatDetails";
 import { useLibrary } from "@/context/LibraryContext";
+import { usePersistentState } from "@/lib/usePersistentState";
 
 export default function MonitoringPage() {
   const { seatViews, seatCounts, floors } = useLibrary();
-  const [search, setSearch] = useState("");
-  const [floorId, setFloorId] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [search, setSearch] = usePersistentState("monitoring:search", "", (v) => typeof v === "string");
+  const [floorId, setFloorId] = usePersistentState("monitoring:floor", "all", (v) => v === "all" || floors.some((f) => f.id === v));
+  const [status, setStatus] = usePersistentState("monitoring:status", "all", (v) => ["all", "available", "occupied", "reserved", "unavailable"].includes(v));
   const [selectedId, setSelectedId] = useState(null);
 
   const seats = useMemo(
@@ -44,7 +45,7 @@ export default function MonitoringPage() {
 
       <Card className="mt-6">
         <div className="flex flex-col gap-2 p-4 sm:flex-row sm:flex-wrap sm:items-center">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search seat number, e.g. A-01" label="Search by seat number" className="sm:min-w-56 sm:flex-1" />
+          <SearchInput value={search} onChange={setSearch} placeholder="Search seat, e.g. A" label="Search by seat number" className="sm:min-w-56 sm:flex-1" />
           <FilterSelect label="Filter by floor" value={floorId} onChange={setFloorId} allLabel="All floors" options={floors.map((f) => ({ value: f.id, label: f.name }))} />
           <FilterSelect label="Filter by status" value={status} onChange={setStatus} allLabel="All statuses" options={["available", "occupied", "reserved", "unavailable"].map((s) => ({ value: s, label: s[0].toUpperCase() + s.slice(1) }))} />
         </div>

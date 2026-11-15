@@ -8,7 +8,6 @@ import { useLibrary } from "@/context/LibraryContext";
 
 const Bar = ({ className }) => <div className={`animate-pulse rounded-md bg-cream-300 ${className}`} />;
 
-/** Page-shaped placeholder: title, stat cards and two content cards. */
 function AdminSkeleton() {
   return (
     <div role="status" aria-busy="true" aria-label="Loading">
@@ -29,7 +28,6 @@ function AdminSkeleton() {
   );
 }
 
-/** Shows a loading, offline or error view instead of the page while the live feed is not ready. */
 export function FeedGate({ children }) {
   const { feedStatus, retryFeed } = useLibrary();
   if (feedStatus === "ready") return children;

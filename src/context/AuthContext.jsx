@@ -13,7 +13,6 @@ import { ADMIN_EMAILS, getFirebaseAuth, isFirebaseConfigured } from "@/lib/fireb
 
 const AuthContext = createContext(null);
 
-// Demo mode (no Firebase keys yet): lets the whole login flow be tried locally.
 export const DEMO_CREDENTIALS = { email: "admin@smartlib.demo", password: "admin123" };
 const DEMO_USER = { email: DEMO_CREDENTIALS.email, name: "Priya Nair" };
 const DEMO_KEY = "smartlib-demo-admin";
@@ -33,11 +32,6 @@ const isAdmin = (email) => ADMIN_EMAILS.includes((email ?? "").toLowerCase());
 
 const toUser = (u) => ({ email: u.email, name: u.displayName || u.email.split("@")[0] });
 
-/**
- * Admin sign-in for the dashboard. Uses Firebase Authentication (email + password and Google);
- * only emails listed in NEXT_PUBLIC_ADMIN_EMAILS are admitted. Real protection must also be
- * enforced in the database security rules; this check only controls what the UI shows.
- */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
@@ -57,7 +51,6 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  /** Shared by both sign-in methods: signs out anyone who is not an approved admin. */
   const admit = useCallback(async (credential) => {
     if (isAdmin(credential.user.email)) return { ok: true };
     await firebaseSignOut(getFirebaseAuth());
@@ -91,7 +84,6 @@ export function AuthProvider({ children }) {
     }
   }, [admit]);
 
-  /** Firebase emails the reset link. The result never reveals whether the address has an account. */
   const resetPassword = useCallback(async (email) => {
     if (!isFirebaseConfigured) return { ok: true, demo: true };
     try {

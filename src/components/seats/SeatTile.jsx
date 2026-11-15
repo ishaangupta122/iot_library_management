@@ -3,7 +3,6 @@ import { Chair } from "@/components/seats/Chair";
 import { STATUS_META } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
-// Same look as the student seat cards: 700-shade accents on a very light tint.
 const CARD = {
   available: "border-ok-700/50 bg-ok-700/[0.05] hover:border-ok-700",
   occupied: "border-brand-700/50 bg-brand-700/[0.05] hover:border-brand-700",
@@ -17,10 +16,9 @@ const TEXT = {
   unavailable: "text-ink-soft",
 };
 
-/** Square seat tile: small chair, seat number and status pill. */
 export function SeatTile({ seat, selected, onSelect, large = false, disabled = false }) {
   const label = STATUS_META[seat.status].label;
-  const offline = seat.sensor.state === "offline" || seat.sensor.state === "stale";
+  const offline = seat.sensor.state === "offline";
   return (
     <button
       type="button"
@@ -37,7 +35,7 @@ export function SeatTile({ seat, selected, onSelect, large = false, disabled = f
       {offline && <WifiOff size={12} aria-label="Sensor offline" className="absolute top-2 right-2 text-muted" />}
       <Chair status={seat.status} size={large ? "lg" : "md"} />
       <span className="flex flex-col items-center gap-1">
-        <span className={cn("leading-none font-semibold text-ink", large ? "text-2xl" : "text-base")}>{seat.number}</span>
+        <span className={cn("leading-none font-semibold text-ink", large ? "text-2xl" : "text-base")}>Seat {seat.number}</span>
         <span className={cn("leading-none font-semibold tracking-wide uppercase", large ? "text-sm" : "text-xs", TEXT[seat.status])}>{label}</span>
       </span>
     </button>

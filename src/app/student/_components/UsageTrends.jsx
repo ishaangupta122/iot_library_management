@@ -3,31 +3,34 @@
 import { useMemo } from "react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/StatusBadge";
-import { ChartCard } from "@/components/charts/ChartCard";
+import { ChartCard } from "@/components/charts/chartParts";
 import { BarsChart } from "@/components/charts/BarsChart";
 import { useLibrary } from "@/context/LibraryContext";
-import { dailyOccupancy, hourlyProfile, weekdayProfile } from "@/lib/analytics";
-import { addDays, dateKeyOf } from "@/lib/utils";
+import { CONFIG } from "@/config";
+import { dailyOccupancy, historyRange, hourlyProfile, sessionsInRange, weekdayProfile } from "@/lib/analytics";
+import { daysBetween, dateKeyOf, WEEKDAY_SHORT } from "@/lib/utils";
 
-const TREND_DAYS = 30;
+const TREND_DAYS = CONFIG.history.studentTrendDays;
 
-/** Historical (not live) patterns to help choose when to visit. */
 export function UsageTrends() {
-  const { seatViews, occupancySessions, operatingHours, nowMs } = useLibrary();
+  const { monitoredSeats, occupancySessions, operatingHours, nowMs } = useLibrary();
   const minute = Math.floor(nowMs / 60_000);
 
   const t = useMemo(() => {
-    const monitoredSeats = seatViews.filter((s) => s.deviceId).length;
     const today = dateKeyOf(nowMs);
-    const range = { start: addDays(today, -TREND_DAYS), end: addDays(today, -1) };
-    const base = { sessions: occupancySessions, monitoredSeats, operatingHours, range, nowMs };
+    const range = historyRange(occupancySessions, today, TREND_DAYS);
+    const base = { sessions: occupancySessions, monitoredSeats: monitoredSeats.length, operatingHours, range, nowMs };
     const hourly = hourlyProfile(base);
     const byOcc = [...hourly].sort((a, b) => a.occupancy - b.occupancy);
-    const weekdays = weekdayProfile(dailyOccupancy(base));
+    const daily = dailyOccupancy(base);
+    const seen = new Set(daily.map((d) => WEEKDAY_SHORT[d.weekday]));
+    const weekdays = weekdayProfile(daily).filter((d) => seen.has(d.label));
     const dayOrder = weekdays.map((d) => d.label);
     const byDay = [...weekdays].sort((a, b) => a.occupancy - b.occupancy);
     const inWeekOrder = (days) => [...days].sort((a, b) => dayOrder.indexOf(a.label) - dayOrder.indexOf(b.label));
     return {
+      days: daysBetween(range.start, range.end) + 1,
+      hasData: sessionsInRange(occupancySessions, range).length > 0,
       hourly,
       quiet: byOcc.slice(0, 3).sort((a, b) => a.hour - b.hour),
       peak: byOcc.slice(-3).sort((a, b) => a.hour - b.hour),
@@ -35,14 +38,17 @@ export function UsageTrends() {
       peakDays: inWeekOrder(byDay.slice(-2)),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seatViews.length, occupancySessions, operatingHours, minute]);
+  }, [monitoredSeats.length, occupancySessions, operatingHours, minute]);
 
   return (
     <section aria-labelledby="trends-title">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <h2 id="trends-title" className="font-display text-xl font-medium">Best time to visit</h2>
-        <Pill tone="warn">Based on the last {TREND_DAYS} days</Pill>
+        <Pill tone="warn">{t.days >= TREND_DAYS ? `Based on the last ${TREND_DAYS} days` : `Based on ${t.days} day${t.days === 1 ? "" : "s"} of data`}</Pill>
       </div>
+      {!t.hasData ? (
+        <Card className="px-5 py-8 text-center text-sm text-muted sm:px-6">Not enough data yet. Usage patterns appear here once seats have been used during opening hours.</Card>
+      ) : (
       <div className="grid gap-6 lg:grid-cols-5">
         <ChartCard className="h-full lg:col-span-3" title="Typical occupancy by hour">
           <BarsChart data={t.hourly} bars={[{ key: "occupancy", name: "Typically occupied", color: "rgba(156, 48, 43, 0.24)" }]} unit="%" yMax={100} highlightMax highlightColor="#9c302b" height={220} />
@@ -58,13 +64,13 @@ export function UsageTrends() {
           </ul>
         </Card>
       </div>
+      )}
     </section>
   );
 }
 
 const DOT = { ok: "bg-ok-700", brand: "bg-brand-700" };
 
-/** One label/value row; a coloured dot marks quiet (green) vs busy (red). */
 function TimeRow({ tone, label, items }) {
   return (
     <li className="flex flex-1 items-center justify-between gap-4 border-b border-line py-2 last:border-b-0">

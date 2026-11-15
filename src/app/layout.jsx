@@ -15,7 +15,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body>
-        {/* One provider for every interface (admin, student site, kiosk) */}
         <AuthProvider>
           <LibraryProvider>{children}</LibraryProvider>
         </AuthProvider>

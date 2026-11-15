@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
-import { getDb } from "@/lib/firebase";
+import { onValue, ref } from "firebase/database";
+import { getDb, getRtdb } from "@/lib/firebase";
+import { readSensors } from "@/lib/sensorMap";
+import { CONFIG } from "@/config";
 
-const HISTORY_DAYS = 90;
+const HISTORY_DAYS = CONFIG.history.loadDays;
 const listen = (source, onData, onError) => onSnapshot(source, onData, onError);
 const docsOf = (snapshot) => snapshot.docs.map((d) => d.data());
 
-/**
- * Live listeners for the shared data. Everything here is read-only: writes go through the /api routes.
- * Returns the raw documents plus `ready` (first data received) and `error`.
- * `isAdmin` also subscribes to the private reservations list.
- */
 export function useLiveFeed(enabled, isAdmin) {
   const [state, setState] = useState({ config: null, sensors: null, holds: null, sessions: null });
   const [reservations, setReservations] = useState(null);
@@ -21,6 +19,7 @@ export function useLiveFeed(enabled, isAdmin) {
   useEffect(() => {
     if (!enabled) return undefined;
     const db = getDb();
+    const rtdb = getRtdb();
     const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString();
     const fail = (e) => setError(e);
     const set = (key) => (value) => {
@@ -29,7 +28,9 @@ export function useLiveFeed(enabled, isAdmin) {
     };
     const stops = [
       listen(doc(db, "config/settings"), (snap) => set("config")(snap.data() ?? {}), fail),
-      listen(collection(db, "sensors"), (snap) => set("sensors")(docsOf(snap).length ? Object.fromEntries(snap.docs.map((d) => [d.id, d.data()])) : {}), fail),
+      rtdb
+        ? onValue(ref(rtdb, "sensors"), (snap) => set("sensors")(readSensors(snap.val())), fail)
+        : (fail(new Error("NEXT_PUBLIC_FIREBASE_DATABASE_URL is not set.")), () => {}),
       listen(collection(db, "holds"), (snap) => set("holds")(docsOf(snap)), fail),
       listen(query(collection(db, "sessions"), where("startedAt", ">=", since)), (snap) => set("sessions")(docsOf(snap)), fail),
     ];

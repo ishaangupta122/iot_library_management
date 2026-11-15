@@ -2,14 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AXIS_PROPS, CHART_COLORS } from "@/components/charts/chartTheme";
-import { ChartTooltip } from "@/components/charts/ChartTooltip";
+import { AXIS_PROPS, CHART_COLORS, ChartTooltip } from "@/components/charts/chartParts";
 
-/**
- * bars: [{ key, name, color }]. `stacked` stacks them. `highlight` colors the top bar differently.
- * `horizontal` draws category labels on the left (better for seat names).
- */
-/** Track the chart's rendered width so axis labels can be thinned out only when they would collide. */
 function useWidth() {
   const ref = useRef(null);
   const [width, setWidth] = useState(0);
@@ -23,12 +17,11 @@ function useWidth() {
   return [ref, width];
 }
 
-const MIN_LABEL_WIDTH = 44; // px a label like "10am" needs to stay readable
+const MIN_LABEL_WIDTH = 44;
 
 export function BarsChart({ data, xKey = "label", bars, height = 260, unit = "", stacked = false, horizontal = false, yMax, highlightMax = false, highlightColor }) {
   const [wrapRef, width] = useWidth();
   const plotWidth = Math.max(0, width - 56);
-  // Thin labels evenly, counting back from the last bar so the final one is always labelled.
   const step = plotWidth > 0 ? Math.max(1, Math.ceil(MIN_LABEL_WIDTH / (plotWidth / data.length))) : 1;
   const labelTicks = data.filter((_, i) => (data.length - 1 - i) % step === 0).map((d) => d[xKey]);
   const maxValue = highlightMax ? Math.max(...data.map((d) => d[bars[0].key])) : null;

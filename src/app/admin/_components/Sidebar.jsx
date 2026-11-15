@@ -9,7 +9,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useLibrary } from "@/context/LibraryContext";
 import { cn, initialsOf } from "@/lib/utils";
 
-/** Tooltip shown beside an icon when the sidebar is collapsed (fixed so the scrolling nav cannot clip it). */
 function RailTip({ label, show, children }) {
   const [pos, setPos] = useState(null);
   const open = (e) => setPos(e.currentTarget.getBoundingClientRect());
@@ -34,7 +33,6 @@ export function Sidebar({ collapsed, mobileOpen, onClose, onToggleCollapse, onLo
   const pathname = usePathname();
   const { library } = useLibrary();
   const { user } = useAuth();
-  // On phones the drawer is always full width; collapse only applies on lg+.
   const rail = collapsed;
 
   return (

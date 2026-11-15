@@ -1,11 +1,11 @@
 "use client";
 
+import { CHART_COLORS, ChartCard } from "@/components/charts/chartParts";
 import { useMemo } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SeatStatCard } from "@/components/seats/SeatStatCard";
-import { ChartCard } from "@/components/charts/ChartCard";
+import { Button } from "@/components/ui/Button";
 import { TrendChart } from "@/components/charts/TrendChart";
-import { CHART_COLORS } from "@/components/charts/chartTheme";
 import { LiveOccupancyCard } from "@/app/admin/_components/LiveOccupancyCard";
 import { RecentReservations } from "@/app/admin/_components/RecentReservations";
 import { useAuth } from "@/context/AuthContext";
@@ -16,8 +16,8 @@ import { addDays, dateKeyOf, hourOfDay } from "@/lib/utils";
 export default function OverviewPage() {
   const lib = useLibrary();
   const { user } = useAuth();
-  const { seatViews, seatCounts, reservationViews, occupancySessions, operatingHours, now, nowMs } = lib;
-  const monitored = seatViews.filter((s) => s.deviceId).length;
+  const { seatCounts, reservationViews, occupancySessions, operatingHours, now, nowMs, monitoredSeats } = lib;
+  const monitored = monitoredSeats.length;
   const today = dateKeyOf(nowMs);
 
   const trend = useMemo(() => {
@@ -33,8 +33,7 @@ export default function OverviewPage() {
     return trend;
   }, [occupancySessions, monitored, operatingHours, nowMs, today]);
 
-  const monitoredSeats = seatViews.filter((s) => s.deviceId && s.enabled && !s.maintenance);
-  const sensorsOnline = monitoredSeats.filter((s) => s.sensor.state === "fresh").length;
+  const sensorsOnline = monitoredSeats.filter((s) => s.sensor.state === "ok").length;
   const activeReservations = reservationViews.filter((r) => r.status === "active").length;
 
   return (
@@ -56,7 +55,7 @@ export default function OverviewPage() {
       </div>
 
       <div className="mt-6">
-        <ChartCard title="Occupancy today">
+        <ChartCard title="Occupancy today" description="Seats in use each hour today, compared with a typical day." action={<Button href="/admin/analytics" size="sm">Open analytics</Button>}>
           <TrendChart data={trend} height={260} series={[{ key: "today", name: "Today", color: CHART_COLORS.brand }, { key: "typical", name: "Typical", color: CHART_COLORS.neutral, type: "line" }]} />
         </ChartCard>
       </div>

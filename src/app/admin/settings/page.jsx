@@ -1,16 +1,14 @@
 "use client";
 
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SensorList } from "./_components/SensorList";
-import { SensorTimeout } from "./_components/SensorTimeout";
+import { OpeningHours } from "./_components/OpeningHours";
 
 export default function SettingsPage() {
   return (
     <>
-      <PageHeader title="Settings" description="Sensor configuration." />
+      <PageHeader title="Settings" description="Library configuration." />
       <div className="max-w-4xl space-y-6">
-        <SensorTimeout />
-        <SensorList />
+        <OpeningHours />
       </div>
     </>
   );

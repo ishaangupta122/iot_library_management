@@ -1,18 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { CHART_COLORS, ChartCard } from "@/components/charts/chartParts";
+import { useMemo } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Segmented } from "@/components/ui/Segmented";
 import { SeatStatCard } from "@/components/seats/SeatStatCard";
-import { ChartCard } from "@/components/charts/ChartCard";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { BarsChart } from "@/components/charts/BarsChart";
-import { CHART_COLORS } from "@/components/charts/chartTheme";
 import { useLibrary } from "@/context/LibraryContext";
-import { avgSessionByWeekday, bucketTrend, dailyOccupancy, durationStats, hourlyForDay, hourlyProfile, sessionsInRange, weekdayProfile } from "@/lib/analytics";
-import { addDays, dateKeyOf, formatDuration } from "@/lib/utils";
+import { usePersistentState } from "@/lib/usePersistentState";
+import { avgSessionByWeekday, bucketTrend, dailyOccupancy, durationStats, historyRange, hourlyForDay, hourlyProfile, sessionsInRange, weekdayProfile } from "@/lib/analytics";
+import { dateKeyOf, formatDuration } from "@/lib/utils";
 
-// One filter sets both the date range and how the trend is grouped.
 const PERIODS = [
   { value: "today", label: "Today", days: 1, group: "hourly" },
   { value: "7d", label: "7 days", days: 7, group: "daily" },
@@ -21,15 +20,14 @@ const PERIODS = [
 ];
 
 export default function AnalyticsPage() {
-  const { seatViews, occupancySessions, operatingHours, nowMs } = useLibrary();
-  const [period, setPeriod] = useState("30d");
+  const { monitoredSeats, occupancySessions, operatingHours, nowMs } = useLibrary();
+  const [period, setPeriod] = usePersistentState("analytics:period", "30d", (v) => PERIODS.some((p) => p.value === v));
   const { days, group } = PERIODS.find((p) => p.value === period);
 
   const a = useMemo(() => {
     const today = dateKeyOf(nowMs);
-    const range = { start: addDays(today, -(days - 1)), end: today };
-    const monitored = seatViews.filter((s) => s.deviceId);
-    const base = { sessions: occupancySessions, monitoredSeats: monitored.length, operatingHours, range, nowMs };
+    const range = historyRange(occupancySessions, today, days);
+    const base = { sessions: occupancySessions, monitoredSeats: monitoredSeats.length, operatingHours, range, nowMs };
     const daily = dailyOccupancy(base);
     const hourly = hourlyProfile(base);
     const weekdays = weekdayProfile(daily);
@@ -45,9 +43,8 @@ export default function AnalyticsPage() {
       peak: top(hourly),
       busiest: top(weekdays),
     };
-  }, [seatViews, occupancySessions, operatingHours, days, group, nowMs]);
+  }, [monitoredSeats, occupancySessions, operatingHours, days, group, nowMs]);
 
-  // A single day has no "busiest day", so those parts only appear for a week or more.
   const showDays = days >= 7;
   const bar = [{ key: "occupancy", name: "Occupancy", color: CHART_COLORS.brandSoft }];
 
@@ -67,23 +64,23 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="mt-6 space-y-6">
-        <ChartCard title="Occupancy over time">
+        <ChartCard title="Occupancy over time" description="Share of seat time in use for each period, during opening hours.">
           <TrendChart data={a.trend} series={[{ key: "occupancy", name: "Occupancy", color: CHART_COLORS.brand }]} />
         </ChartCard>
 
         <div className={`grid gap-6 ${showDays ? "lg:grid-cols-2" : ""}`}>
-          <ChartCard title="Peak usage hours">
+          <ChartCard title="Peak usage hours" description="Average share of seats in use at each hour of the day.">
             <BarsChart data={a.hourly} bars={bar} unit="%" yMax={100} highlightMax height={240} />
           </ChartCard>
           {showDays && (
-            <ChartCard title="Busiest days">
+            <ChartCard title="Busiest days" description="Average share of seats in use on each day of the week.">
               <BarsChart data={a.weekdays} bars={bar} unit="%" yMax={100} highlightMax height={240} />
             </ChartCard>
           )}
         </div>
 
         {showDays && (
-          <ChartCard title="Average session time by day">
+          <ChartCard title="Average session time by day" description="How long students typically stay, by the day they arrived.">
             <BarsChart data={a.sessionByDay} horizontal bars={[{ key: "minutes", name: "Average session", color: CHART_COLORS.brandSoft }]} unit="m" highlightMax height={300} />
           </ChartCard>
         )}

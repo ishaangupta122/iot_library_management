@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/Card";
 
 const Bar = ({ className }) => <div className={`animate-pulse rounded-md bg-cream-300 ${className}`} />;
 
-/** Placeholder shaped like the real seat layout while the first data arrives. */
 export function KioskSkeleton() {
   return (
     <div role="status" aria-busy="true" aria-label="Loading seats">
@@ -33,7 +32,6 @@ const MESSAGES = {
   full: { icon: Armchair, title: "All seats are taken right now", text: "Please check back in a few minutes. This screen updates by itself." },
 };
 
-/** Large centered message for the offline, error and "no free seats" states. */
 export function KioskMessage({ kind, onRetry }) {
   const { icon: Icon, title, text } = MESSAGES[kind];
   return (

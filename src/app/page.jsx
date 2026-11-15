@@ -1,15 +1,15 @@
 import Link from "next/link";
+import { CONFIG } from "@/config";
 import { ArrowRight, GraduationCap, LayoutDashboard, LibraryBig, MonitorSmartphone } from "lucide-react";
 
 export const metadata = { title: "SmartLib" };
 
 const INTERFACES = [
   { href: "/student", audience: "For students", title: "Student Website", description: "See which seats are free right now and the best times to visit.", icon: GraduationCap },
-  { href: "/kiosk", audience: "For the library entrance", title: "Reservation Kiosk", description: "Tap a free seat and your ID card to hold it for 5 minutes.", icon: MonitorSmartphone },
+  { href: "/kiosk", audience: "For the library entrance", title: "Reservation Kiosk", description: `Tap a free seat and your ID card to hold it for ${CONFIG.reservation.holdMinutes} minutes.`, icon: MonitorSmartphone },
   { href: "/admin", audience: "For library staff", title: "Admin Dashboard", description: "Monitor seats and sensors, reservations and usage.", icon: LayoutDashboard },
 ];
 
-// Launcher for the three interfaces. They all share the same live seat data.
 export default function HomePage() {
   return (
     <div className="tight-corners flex min-h-screen flex-col">

@@ -1,9 +1,10 @@
-import { LIBRARY_TIMEZONE, LIBRARY_UTC_OFFSET_MIN } from "@/data/mockData";
-
 export const cn = (...classes) => classes.flat().filter(Boolean).join(" ");
 
-const MIN = 60_000;
-const DAY = 86_400_000;
+export const LIBRARY_TIMEZONE = "Asia/Kolkata";
+export const LIBRARY_UTC_OFFSET_MIN = 330;
+export const MIN = 60_000;
+export const HOUR = 3_600_000;
+export const DAY = 86_400_000;
 const OFFSET_MS = LIBRARY_UTC_OFFSET_MIN * MIN;
 
 const formatter = (options) => new Intl.DateTimeFormat("en-US", { timeZone: LIBRARY_TIMEZONE, ...options });
@@ -16,7 +17,6 @@ export const formatTime = (value) => (value ? timeFmt.format(new Date(value)) : 
 export const formatDate = (value) => (value ? dateFmt.format(new Date(value)) : "—");
 export const formatDateTime = (value) => (value ? dateTimeFmt.format(new Date(value)) : "—");
 
-/** 75 -> "1h 15m", 0.4 -> "<1m" */
 export function formatDuration(minutes) {
   if (minutes == null || Number.isNaN(minutes)) return "—";
   if (minutes < 1) return "<1m";
@@ -44,8 +44,6 @@ export function relativeTime(value, now) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-/* ---- Library-local calendar helpers (dates are "YYYY-MM-DD" keys) ---- */
-
 export const dateKeyOf = (ms) => new Date(ms + OFFSET_MS).toISOString().slice(0, 10);
 export const weekdayOf = (ms) => new Date(ms + OFFSET_MS).getUTCDay();
 export const hourOfDay = (ms) => new Date(ms + OFFSET_MS).getUTCHours();
@@ -63,7 +61,6 @@ export const formatHourLabel = (hour) => {
   return `${h}${hour < 12 ? "am" : "pm"}`;
 };
 
-/** Compare helper used by sortable tables. */
 export function compareValues(a, b) {
   if (a == null && b == null) return 0;
   if (a == null) return 1;
@@ -79,3 +76,5 @@ export const initialsOf = (name) =>
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+export const normalizeRoll = (value) => String(value ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");

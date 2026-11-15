@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Accessible dialog. `placement="right"` renders a side drawer (full-width on phones). */
 export function Modal({ open, onClose, title, description, badge, children, footer, size = "md", placement = "center" }) {
   const panelRef = useRef(null);
 

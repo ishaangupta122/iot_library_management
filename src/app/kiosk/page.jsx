@@ -1,45 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SimulationPanel } from "@/components/SimulationPanel";
 import { Card } from "@/components/ui/Card";
 import { CONFIRMATION_MS, KioskConfirmation } from "@/app/kiosk/_components/KioskConfirmation";
 import { KioskReserveModal } from "@/app/kiosk/_components/KioskReserveModal";
 import { KioskMessage, KioskSkeleton } from "@/app/kiosk/_components/KioskStates";
 import { SeatTile } from "@/components/seats/SeatTile";
 import { useLibrary } from "@/context/LibraryContext";
+import { CONFIG } from "@/config";
 import { formatDuration } from "@/lib/utils";
+import { SeatLegend } from "@/components/seats/SeatLegend";
 
-const LEGEND = [
-  { label: "Available", dot: "bg-ok-700" },
-  { label: "Occupied", dot: "bg-brand-700" },
-  { label: "Reserved", dot: "bg-warn-700" },
-  { label: "Unavailable", dot: "bg-ink-soft/60" },
-];
 const MODAL_IDLE_MS = 45_000;
 
 export default function KioskApp() {
-  const { library, seatViews, floors, seatCounts, settings, setClockRunning, feedStatus, retryFeed } = useLibrary();
+  const { library, publicSeatViews: seatViews, floors, publicSeatCounts: seatCounts, setClockRunning, feedStatus, retryFeed } = useLibrary();
   const ready = feedStatus === "ready";
   const [selectedId, setSelectedId] = useState(null);
   const [done, setDone] = useState(null);
-  const [dev, setDev] = useState(false);
-  const hold = formatDuration(settings.reservation.durationMinutes);
+  const hold = formatDuration(CONFIG.reservation.holdMinutes);
 
   useEffect(() => {
     setClockRunning(true);
-    // Developer tools stay hidden on the real kiosk; open /kiosk?dev to simulate the card reader and sensors.
-    setDev(new URLSearchParams(window.location.search).has("dev"));
     return () => setClockRunning(false);
   }, [setClockRunning]);
 
-  // Walk-up kiosk: the confirmation clears itself so the next student can go straight on.
   useEffect(() => {
     if (!done) return undefined;
     const timer = setTimeout(() => setDone(null), CONFIRMATION_MS);
     return () => clearTimeout(timer);
   }, [done]);
-  // Losing the connection mid-reservation: drop the open seat so nobody scans into a dead screen.
   useEffect(() => {
     if (!ready) setSelectedId(null);
   }, [ready]);
@@ -75,11 +65,7 @@ export default function KioskApp() {
                   <Card key={floor.id}>
                     <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 border-b border-line px-6 py-4">
                       <h2 className="text-lg font-semibold">{floor.name}</h2>
-                      <ul className="flex flex-wrap gap-x-5 gap-y-1.5" aria-label="Seat status legend">
-                        {LEGEND.map((l) => (
-                          <li key={l.label} className="flex items-center gap-2 text-sm font-medium text-ink-soft"><span className={`h-3 w-3 rounded-full ${l.dot}`} aria-hidden="true" />{l.label}</li>
-                        ))}
-                      </ul>
+                      <SeatLegend large />
                     </div>
                     <div className="grid grid-cols-2 gap-5 p-6 sm:grid-cols-4">
                       {seats.map((seat) => (
@@ -95,8 +81,7 @@ export default function KioskApp() {
       <footer className="shrink-0 px-6 pb-5 text-center text-sm text-muted">{library.name} · SmartLib</footer>
 
       {done && <KioskConfirmation reservation={done} onClose={() => setDone(null)} />}
-      <KioskReserveModal key={selectedId} dev={dev} seatId={selectedId} onClose={() => setSelectedId(null)} onReserved={(reservation) => { setSelectedId(null); setDone(reservation); }} />
-      {dev && <SimulationPanel />}
+      <KioskReserveModal key={selectedId} seatId={selectedId} onClose={() => setSelectedId(null)} onReserved={(reservation) => { setSelectedId(null); setDone(reservation); }} />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-/** Click-outside / Escape dismissible dropdown. `trigger` receives { open, toggle, props }. */
 export function Popover({ trigger, children, align = "right", width = "w-80", label }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);

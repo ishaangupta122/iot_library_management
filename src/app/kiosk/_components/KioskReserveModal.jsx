@@ -1,28 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { FlaskConical } from "lucide-react";
+import { Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { BarcodeScanner } from "./BarcodeScanner";
 import { useLibrary } from "@/context/LibraryContext";
+import { CONFIG } from "@/config";
 import { formatDuration } from "@/lib/utils";
 
-/**
- * Confirms a reservation for the tapped seat. The student identifies by scanning the Code 128
- * barcode (their roll number) on their ID card with the camera: no typing. `handleCardTap` looks
- * the scanned roll number up (on the server when live); the dev box below simulates a scan.
- */
-export function KioskReserveModal({ seatId, onClose, onReserved, dev = false }) {
-  const { seatById, students, settings, reserveWithCard, isLive } = useLibrary();
+export function KioskReserveModal({ seatId, onClose, onReserved }) {
+  const { seatById, reserveWithCard } = useLibrary();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [devStudentId, setDevStudentId] = useState(students[0]?.id);
+  const [typing, setTyping] = useState(false);
+  const [roll, setRoll] = useState("");
   const seat = seatId ? seatById.get(seatId) : null;
   if (!seat) return null;
 
-  const hold = formatDuration(settings.reservation.durationMinutes);
+  const hold = formatDuration(CONFIG.reservation.holdMinutes);
   const stillFree = seat.status === "available";
 
   const handleCardTap = async (scanned) => {
@@ -54,24 +51,37 @@ export function KioskReserveModal({ seatId, onClose, onReserved, dev = false }) 
           <p className="text-lg font-semibold text-ink">Reserve this seat for {hold}?</p>
           <p className="mt-1 text-[15px] text-muted">Sit down before the time runs out, or the seat is released.</p>
           <div className="mt-5">
-            {busy ? <p className="rounded-xl bg-cream-100 px-6 py-16 text-center text-lg font-semibold text-ink-soft">Checking your card…</p> : <BarcodeScanner onScan={handleCardTap} />}
-            <p className="mt-3 text-center font-display text-xl font-medium">Show your ID card barcode to the camera</p>
+            {busy ? (
+              <p className="rounded-xl bg-cream-100 px-6 py-16 text-center text-lg font-semibold text-ink-soft">Checking your card…</p>
+            ) : typing ? (
+              <form
+                className="rounded-xl bg-cream-100 px-6 py-8"
+                onSubmit={(e) => { e.preventDefault(); if (roll.trim()) handleCardTap(roll); }}
+              >
+                <label htmlFor="roll" className="mb-2 block text-center text-sm font-medium text-ink-soft">Roll number (as printed on your ID card)</label>
+                <div className="mx-auto flex max-w-sm gap-2">
+                  <input id="roll" autoFocus inputMode="numeric" autoComplete="off" value={roll} onChange={(e) => setRoll(e.target.value)} placeholder="e.g. 1024031118" className="h-12 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-lg tabular-nums" />
+                  <Button type="submit" variant="primary" className="h-12" disabled={!roll.trim()}>Reserve seat</Button>
+                </div>
+              </form>
+            ) : (
+              <BarcodeScanner onScan={handleCardTap} />
+            )}
+            {!busy && (
+              <>
+                <p className="mt-3 text-center font-display text-xl font-medium">{typing ? "Type your roll number" : "Show your ID card barcode to the camera"}</p>
+                <p className="mt-2 text-center">
+                  <button type="button" onClick={() => { setTyping((t) => !t); setRoll(""); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 underline-offset-4 hover:underline">
+                    <Keyboard size={15} aria-hidden="true" />
+                    {typing ? "Scan my card instead" : "No card? Type your roll number"}
+                  </button>
+                </p>
+              </>
+            )}
           </div>
         </>
       )}
 
-      {dev && !isLive && stillFree && !error && (
-        <div className="mt-5 rounded-lg border border-dashed border-line-strong p-3">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted uppercase"><FlaskConical size={13} aria-hidden="true" /> Dev: simulate a scan</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="sr-only" htmlFor="dev-card">Student card</label>
-            <select id="dev-card" value={devStudentId} onChange={(e) => setDevStudentId(e.target.value)} className="h-9 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-2.5 text-sm">
-              {students.map((s) => <option key={s.id} value={s.id}>{s.name} · {s.id}</option>)}
-            </select>
-            <Button size="sm" onClick={() => handleCardTap(devStudentId)}>Tap card</Button>
-          </div>
-        </div>
-      )}
     </Modal>
   );
 }

@@ -4,7 +4,7 @@ import { Armchair, Ban, CheckCircle2, Clock, Info } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { STATUS_META } from "@/components/ui/StatusBadge";
 import { useLibrary } from "@/context/LibraryContext";
-import { cn, formatTime, relativeTime } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 
 const ICONS = { available: CheckCircle2, occupied: Armchair, reserved: Clock, unavailable: Ban };
 const THEME = {
@@ -14,10 +14,8 @@ const THEME = {
   unavailable: { panel: "border-line-strong bg-gradient-to-br from-cream-200 to-surface", pill: "bg-ink-soft text-white", text: "Status can't be confirmed right now." },
 };
 const SENSOR = {
-  fresh: { text: "Working", dot: "bg-ok-500" },
-  stale: { text: "Not sending data", dot: "bg-warn-500" },
-  offline: { text: "Offline", dot: "bg-brand-600" },
-  inactive: { text: "Not active", dot: "bg-muted/60" },
+  ok: { text: "Working", dot: "bg-ok-500" },
+  offline: { text: "Not reporting", dot: "bg-brand-600" },
   none: { text: "No sensor", dot: "bg-muted/60" },
 };
 
@@ -30,9 +28,8 @@ function Row({ label, children }) {
   );
 }
 
-/** Read-only seat information. Public view hides people and device IDs; `admin` adds them and drops the kiosk note. */
 export function SeatDetails({ seatId, onClose, admin = false }) {
-  const { seatById, now, nowMs } = useLibrary();
+  const { seatById, nowMs } = useLibrary();
   const seat = seatId ? seatById.get(seatId) : null;
   if (!seat) return null;
 
@@ -54,7 +51,6 @@ export function SeatDetails({ seatId, onClose, admin = false }) {
 
       <dl className="mt-4 divide-y divide-line">
         <Row label="Sensor"><span className="inline-flex items-center gap-2"><span className={cn("h-2.5 w-2.5 rounded-full", sensor.dot)} aria-hidden="true" />{admin && seat.device ? `${seat.device.id} · ${sensor.text}` : sensor.text}</span></Row>
-        <Row label="Last updated">{seat.device?.lastSeenAt ? relativeTime(seat.device.lastSeenAt, now) : "—"}</Row>
         {admin && seat.reservation && <Row label="Held by">{seat.reservation.studentName}</Row>}
         {seat.reservation && (
           <Row label="Held until">

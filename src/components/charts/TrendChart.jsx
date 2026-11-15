@@ -1,13 +1,8 @@
 "use client";
 
 import { Area, CartesianGrid, Legend, Line, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AXIS_PROPS, CHART_COLORS } from "@/components/charts/chartTheme";
-import { ChartTooltip } from "@/components/charts/ChartTooltip";
+import { AXIS_PROPS, CHART_COLORS, ChartTooltip } from "@/components/charts/chartParts";
 
-/**
- * Percentage trend. `series`: [{ key, name, color, type: "area" | "line" }]
- * Pass more than one series to compare (e.g. today vs. typical).
- */
 export function TrendChart({ data, xKey = "label", series, height = 260, yMax = 100, yTicks, axisUnit = "%", tooltipUnit = "%" }) {
   return (
     <div style={{ height }} role="img" aria-label={`Chart of ${series.map((s) => s.name).join(" and ")}`}>

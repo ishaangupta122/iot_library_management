@@ -9,6 +9,8 @@ service cloud.firestore {
     match /holds/{id}    { allow read: if true; allow write: if false; }
     match /sessions/{id} { allow read: if true; allow write: if false; }
     match /config/{id}   { allow read: if true; allow write: if false; }
+    // Raw sensor change log written by scripts/recorder.mjs. Not needed by any page.
+    match /events/{id}   { allow read, write: if false; }
 
     // Private: reservations name the student, so only admins may read them.
     match /reservations/{id} {

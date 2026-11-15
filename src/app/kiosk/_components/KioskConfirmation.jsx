@@ -6,7 +6,6 @@ import { formatDuration, formatTime } from "@/lib/utils";
 
 export const CONFIRMATION_MS = 4000;
 
-/** Brief "you're set" message shown over the layout, then it clears itself so the next student can go. */
 export function KioskConfirmation({ reservation: r, onClose }) {
   const { seatById } = useLibrary();
   if (!r) return null;

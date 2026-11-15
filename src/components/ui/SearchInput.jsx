@@ -17,7 +17,6 @@ export function SearchInput({ value, onChange, placeholder, label = "Search", cl
   );
 }
 
-/** Compact labelled select used in filter bars. */
 export function FilterSelect({ label, value, onChange, options, allLabel }) {
   return (
     <select

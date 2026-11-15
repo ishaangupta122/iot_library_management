@@ -3,11 +3,9 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { STATUS_META } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
-// Brighter, clearly different hues so the segments are easy to tell apart.
 const BAR = { occupied: "bg-brand-600", reserved: "bg-warn-500", available: "bg-ok-500", unavailable: "bg-line-strong" };
 const ORDER = ["occupied", "reserved", "available", "unavailable"];
 
-/** One bar showing the split of every seat by status. */
 export function LiveOccupancyCard({ counts }) {
   return (
     <Card>

@@ -3,17 +3,14 @@
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, SearchX } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useLibrary } from "@/context/LibraryContext";
 import { cn, compareValues } from "@/lib/utils";
+import { usePersistentState } from "@/lib/usePersistentState";
 
-/**
- * Generic sortable, paginated table.
- * columns: [{ key, header, render?(row), sortValue?(row), sortable?, align?, className? }]
- */
+const ROWS_PER_PAGE = 10;
+
 export function DataTable({ columns, rows, rowKey = "id", onRowClick, initialSort, pageSize, caption, empty }) {
-  const { settings } = useLibrary();
-  const size = pageSize ?? settings.preferences.rowsPerPage;
-  const [sort, setSort] = useState(initialSort ?? null);
+  const size = pageSize ?? ROWS_PER_PAGE;
+  const [sort, setSort] = usePersistentState(`table:${caption ?? "untitled"}:sort`, initialSort ?? null, (v) => v === null || (columns.some((c) => c.key === v?.key) && ["asc", "desc"].includes(v?.dir)));
   const [page, setPage] = useState(1);
 
   const sorted = useMemo(() => {
