@@ -18,6 +18,10 @@ export function route(handler) {
       return await handler(request);
     } catch (error) {
       if (error instanceof ApiError) return json({ ok: false, error: error.message }, error.status);
+      if (error?.code === 8 || error?.code === "resource-exhausted") {
+        console.warn("Firestore daily quota reached");
+        return json({ ok: false, error: "Reservations are paused for today because the library system has reached its daily limit. Please ask the library desk." }, 503);
+      }
       console.error(error);
       return json({ ok: false, error: "Something went wrong on the server. Please try again." }, 500);
     }
